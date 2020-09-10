@@ -1,0 +1,36 @@
+#app:
+app:
+  version: '@project.version@'
+  cors-allowed-origins: [ "*" ]
+  upload-dir:
+  first-admin:
+    email:
+    name:
+    password:
+jwt:
+  max-refresh-tokens-per-user: 5
+  secret: fill-me-later
+  access-duration: PT5M
+  refresh-duration: P90D
+spring:
+  jmx:
+    default-domain: ru.printhappens.onlineshopspring
+    unique-names: true
+spring.jackson.mapper.DEFAULT_VIEW_INCLUSION: true
+spring.servlet.multipart.max-file-size: 100MB
+spring.servlet.multipart.max-request-size: 100MB
+# ===============================
+# DB CONNECTION
+# ===============================
+spring.datasource.url: # REQUIRED database jdbc url
+spring.datasource.username: # REQUIRED database username
+spring.datasource.password: # REQUIRED database password
+# ===============================
+# JPA / HIBERNATE
+# ===============================
+spring.jpa.show-sql: false
+spring.jpa.hibernate.ddl-auto: update
+spring.jpa.properties.hibernate.default_schema: public
+spring.jpa.properties.hibernate.dialect: com.a6raywa1cher.mucservingboxspring.utils.PostgreSqlDialectFixed
+spring.jpa.properties.hibernate.current_session_context_class: org.springframework.orm.hibernate5.SpringSessionContext
+spring.jpa.properties.hibernate.temp.use_jdbc_metadata_defaults: false
