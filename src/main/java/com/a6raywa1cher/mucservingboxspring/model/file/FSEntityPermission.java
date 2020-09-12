@@ -23,7 +23,12 @@ public class FSEntityPermission {
 	@ElementCollection
 	private List<UserRole> affectedUserRoles;
 
-	private boolean allow;
+	@Column
+	private Boolean allow;
 
-	private int mask;
+	@Column
+	private Boolean applicationDefined;
+
+	@Column
+	private Integer mask;
 }

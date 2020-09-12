@@ -1,4 +1,4 @@
-package com.a6raywa1cher.mucservingboxspring.utils;
+package com.a6raywa1cher.mucservingboxspring.utils.hibernate;
 
 import org.hibernate.QueryException;
 import org.hibernate.dialect.function.SQLFunction;
@@ -8,14 +8,14 @@ import org.hibernate.type.Type;
 
 import java.util.List;
 
-public class BitwiseAndFunction extends StandardSQLFunction
+public class BitwiseAndStandardSQLFunction extends StandardSQLFunction
 	implements SQLFunction {
 
-	public BitwiseAndFunction(String name) {
+	public BitwiseAndStandardSQLFunction(String name) {
 		super(name);
 	}
 
-	public BitwiseAndFunction(String name, Type type) {
+	public BitwiseAndStandardSQLFunction(String name, Type type) {
 		super(name, type);
 	}
 

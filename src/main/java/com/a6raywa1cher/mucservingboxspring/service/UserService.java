@@ -7,6 +7,10 @@ import java.time.ZonedDateTime;
 import java.util.Optional;
 
 public interface UserService {
+	User create(String registrationIp);
+
+	User create(UserRole userRole, String username, String name, String password, String registrationIp);
+
 	Optional<User> getById(Long id);
 
 	Optional<User> getByUsername(String username);

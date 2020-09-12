@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.ToString;
 
 import javax.persistence.*;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
 @Entity
 @Data
@@ -19,22 +19,22 @@ public class FSEntity {
 	private String path;
 
 	@Column
-	private String name;
-
-	@Column
 	private Boolean isFolder;
 
 	@Column(length = 1024)
 	private String diskObjectPath;
 
+	@Column
+	private Boolean hidden;
+
 	@ManyToOne
 	private User createdBy;
 
 	@Column
-	private LocalDateTime createdTimestamp;
+	private ZonedDateTime createdTimestamp;
 
 	@Column
-	private LocalDateTime modifiedTimestamp;
+	private ZonedDateTime modifiedTimestamp;
 
 	@Column
 	private long byteSize;

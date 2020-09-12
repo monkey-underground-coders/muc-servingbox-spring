@@ -5,6 +5,7 @@ import lombok.Data;
 
 import javax.persistence.*;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -27,7 +28,7 @@ public class User {
 	private UserRole userRole;
 
 	@OneToMany(mappedBy = "creator")
-	private List<LessonSchema> schemaList;
+	private List<LessonSchema> schemaList = new ArrayList<>();
 
 	@Column
 	private ZonedDateTime expiringAt;

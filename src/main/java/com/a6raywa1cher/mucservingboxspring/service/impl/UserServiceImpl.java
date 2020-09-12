@@ -5,18 +5,67 @@ import com.a6raywa1cher.mucservingboxspring.model.UserRole;
 import com.a6raywa1cher.mucservingboxspring.model.repo.UserRepository;
 import com.a6raywa1cher.mucservingboxspring.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class UserServiceImpl implements UserService {
 	private final UserRepository repository;
+	private final PasswordEncoder passwordEncoder;
+	private final Duration temporaryUserAccessDuration;
+	private final String temporaryUserName;
 
 	@Autowired
-	public UserServiceImpl(UserRepository repository) {
+	public UserServiceImpl(UserRepository repository, PasswordEncoder passwordEncoder,
+						   @Value("${app.temporary-user-access-duration}") Duration temporaryUserAccessDuration,
+						   @Value("${app.temporary-user-name}") String temporaryUserName) {
 		this.repository = repository;
+		this.passwordEncoder = passwordEncoder;
+		this.temporaryUserAccessDuration = temporaryUserAccessDuration;
+		this.temporaryUserName = temporaryUserName;
+	}
+
+	private int extractNumber(String name) {
+		return Integer.parseInt(name.substring(name.lastIndexOf('#')));
+	}
+
+	@Override
+	public synchronized User create(String registrationIp) {
+		Optional<User> lastTemporaryUser = repository.findTopByUserRole(
+			UserRole.TEMPORARY_USER,
+			PageRequest.of(0, 1, Sort.Direction.DESC, "id"));
+		int number = lastTemporaryUser.map(user -> extractNumber(user.getName())).orElse(1);
+		return create(UserRole.TEMPORARY_USER,
+			UUID.randomUUID().toString(),
+			String.format(temporaryUserName, number),
+			UUID.randomUUID().toString(),
+			registrationIp);
+	}
+
+	@Override
+	public synchronized User create(UserRole userRole, String username, String name, String password, String registrationIp) {
+		User user = new User();
+		user.setUsername(username);
+		user.setPassword(passwordEncoder.encode(password));
+		user.setName(name);
+		user.setUserRole(userRole);
+		user.setSchemaList(new ArrayList<>());
+		user.setExpiringAt(userRole == UserRole.TEMPORARY_USER ?
+			ZonedDateTime.now().plus(temporaryUserAccessDuration) :
+			null);
+		user.setCreatedAt(ZonedDateTime.now());
+		user.setCreatedIp(registrationIp);
+		user.setLastVisitAt(ZonedDateTime.now());
+		return user;
 	}
 
 	@Override

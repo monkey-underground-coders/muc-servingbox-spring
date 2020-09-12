@@ -9,6 +9,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.nio.file.Path;
+import java.time.Duration;
 
 @Component
 @ConfigurationProperties(prefix = "app")
@@ -24,6 +25,12 @@ public class AppConfigProperties {
 
 	@NotNull
 	private Path uploadDir;
+
+	@NotNull
+	private Duration temporaryUserAccessDuration;
+
+	@NotBlank
+	private String temporaryUserName;
 
 	@Data
 	public static final class FirstAdmin {

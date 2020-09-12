@@ -3,6 +3,8 @@ app:
   version: '@project.version@'
   cors-allowed-origins: [ "*" ]
   upload-dir:
+  temporary-user-access-duration: P1D
+  temporary-user-name: "Временный ученик #%s"
   first-admin:
     email:
     name:
@@ -31,6 +33,6 @@ spring.datasource.password: # REQUIRED database password
 spring.jpa.show-sql: false
 spring.jpa.hibernate.ddl-auto: update
 spring.jpa.properties.hibernate.default_schema: public
-spring.jpa.properties.hibernate.dialect: com.a6raywa1cher.mucservingboxspring.utils.PostgreSqlDialectFixed
+spring.jpa.properties.hibernate.dialect: com.a6raywa1cher.mucservingboxspring.utils.hibernate.PostgreSqlDialectFixed
 spring.jpa.properties.hibernate.current_session_context_class: org.springframework.orm.hibernate5.SpringSessionContext
 spring.jpa.properties.hibernate.temp.use_jdbc_metadata_defaults: false
