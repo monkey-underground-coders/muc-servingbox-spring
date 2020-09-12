@@ -35,7 +35,7 @@ public class AppConfigProperties {
 	@Data
 	public static final class FirstAdmin {
 		@NotBlank
-		private String email;
+		private String username;
 
 		@NotBlank
 		private String name;

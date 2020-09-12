@@ -16,12 +16,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.net.URI;
 import java.nio.file.Path;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -141,7 +139,7 @@ public class FSEntityServiceImpl implements FSEntityService {
 	}
 
 	@Override
-	public FSEntity copyEntity(FSEntity object, boolean copyPermissions, FSEntity parent, String name,
+	public FSEntity copyEntity(FSEntity object, FSEntity parent, String name,
 							   boolean hidden, User creator) {
 		if (object.isFile()) {
 			Pair<Path, Long> pair = diskService.copyFile(Path.of(object.getPath()));
@@ -150,7 +148,7 @@ public class FSEntityServiceImpl implements FSEntityService {
 			}
 			Path newFile = pair.getFirst();
 			long size = pair.getSecond();
-			FSEntity fsEntity = createNode(
+			return createNode(
 				parent.getPath() + name,
 				false,
 				newFile.toString(),
@@ -158,9 +156,30 @@ public class FSEntityServiceImpl implements FSEntityService {
 				size,
 				creator
 			);
-			if (copyPermissions) {
-
+		} else {
+			URI originalParent = URI.create(object.getPath());
+			URI targetParent = URI.create(parent.getPath());
+			List<FSEntity> fsEntities = permissionService.getAllChildrenWithAccess(object, creator, null, ActionType.READ);
+			List<FSEntity> files = fsEntities.stream().filter(FSEntity::isFile).collect(Collectors.toList());
+			Map<Path, Pair<Path, Long>> prevPathToNewPathAndSize =
+				diskService.copyFiles(files.stream().map(FSEntity::getPath).map(Path::of).collect(Collectors.toList()));
+			if (prevPathToNewPathAndSize == null) {
+				return null;
 			}
+			fsEntities.stream()
+				.forEach(entity -> {
+					URI newPath = targetParent.resolve(originalParent.relativize(URI.create(entity.getPath())));
+					Pair<Path, Long> pair = entity.isFile() ?
+						prevPathToNewPathAndSize.get(Path.of(entity.getDiskObjectPath())) :
+						null;
+					createNode(newPath.toString(),
+						entity.isFolder(),
+						pair != null ? pair.getFirst().toString() : null,
+						entity.getHidden(),
+						pair != null ? pair.getSecond() : 0,
+						entity.getCreatedBy());
+				});
+			return parent;
 		}
 	}
 
@@ -169,13 +188,14 @@ public class FSEntityServiceImpl implements FSEntityService {
 	public void deleteFile(FSEntity entity) {
 		if (entity.isFile()) {
 			diskService.deleteFile(Path.of(entity.getDiskObjectPath()));
+			permissionService.delete(permissionService.getByFSEntity(entity));
+			repository.delete(entity);
 		} else {
 			diskService.deleteFiles(repository.findChildrenFilesByPath(entity.getPath()).parallelStream()
 				.map(s -> Path.of(s.getDiskObjectPath()))
 				.collect(Collectors.toList()));
-			permissionService.deleteAllInChildrenFoldersOf(entity);
+			permissionService.deletePermissionsTreeFor(entity);
+			repository.deleteAllChildren(entity.getPath());
 		}
-		permissionService.delete(permissionService.getByFSEntity(entity));
-		repository.delete(entity);
 	}
 }

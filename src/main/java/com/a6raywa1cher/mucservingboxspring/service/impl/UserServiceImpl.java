@@ -40,9 +40,10 @@ public class UserServiceImpl implements UserService {
 
 	@Override
 	public synchronized User create(String registrationIp) {
-		Optional<User> lastTemporaryUser = repository.findTopByUserRole(
+		Optional<User> lastTemporaryUser = repository.findTop1ByUserRole(
 			UserRole.TEMPORARY_USER,
-			PageRequest.of(0, 1, Sort.Direction.DESC, "id"));
+			PageRequest.of(0, 1, Sort.Direction.DESC, "id"))
+			.stream().findFirst();
 		int number = lastTemporaryUser.map(user -> extractNumber(user.getName())).orElse(1);
 		return create(UserRole.TEMPORARY_USER,
 			UUID.randomUUID().toString(),

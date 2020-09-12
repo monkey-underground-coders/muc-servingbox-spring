@@ -23,9 +23,13 @@ public interface FSEntityPermissionService {
 
 	Optional<FSEntityPermission> check(FSEntity fsEntity, ActionType type, User user);
 
+	List<FSEntity> getAllChildrenWithAccess(FSEntity parent, User user, Boolean file, ActionType actionType);
+
 	void delete(FSEntityPermission permission);
 
 	void delete(List<FSEntityPermission> list);
 
-	void deleteAllInChildrenFoldersOf(FSEntity parent);
+	void deletePermissionsFor(FSEntity parent);
+
+	void deletePermissionsTreeFor(FSEntity parent);
 }

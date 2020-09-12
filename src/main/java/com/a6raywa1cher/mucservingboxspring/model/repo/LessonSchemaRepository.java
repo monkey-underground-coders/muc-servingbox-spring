@@ -10,6 +10,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface LessonSchemaRepository extends PagingAndSortingRepository<LessonSchema, Long> {
-	@Query("from LessonSchema ls where fts('russian', ls.title, :searchQuery)")
+	@Query("from LessonSchema ls where fts('russian', ls.title, :searchQuery) = true")
 	Page<LessonSchema> findByTitle(@Param("searchQuery") String searchQuery, Pageable pageable);
 }

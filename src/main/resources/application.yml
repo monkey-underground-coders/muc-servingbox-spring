@@ -6,7 +6,7 @@ app:
   temporary-user-access-duration: P1D
   temporary-user-name: "Временный ученик #%s"
   first-admin:
-    email:
+    username:
     name:
     password:
 jwt:

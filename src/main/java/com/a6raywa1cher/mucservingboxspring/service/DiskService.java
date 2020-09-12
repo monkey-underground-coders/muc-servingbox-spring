@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 
 public interface DiskService {
 	Pair<Path, Long> createFile(InputStream inputStream);
@@ -19,6 +20,8 @@ public interface DiskService {
 	Long modifyFile(Path path, MultipartFile inputStream);
 
 	Pair<Path, Long> copyFile(Path path);
+
+	Map<Path, Pair<Path, Long>> copyFiles(List<Path> path);
 
 	File resolve(Path path);
 

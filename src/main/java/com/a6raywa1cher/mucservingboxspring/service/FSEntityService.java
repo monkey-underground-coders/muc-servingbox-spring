@@ -28,7 +28,8 @@ public interface FSEntityService {
 
 	FSEntity modifyFile(FSEntity file, MultipartFile newContent);
 
-	FSEntity copyEntity(FSEntity object, FSEntity to, User creator);
+	FSEntity copyEntity(FSEntity object, FSEntity parent, String name,
+						boolean hidden, User creator);
 
 	void deleteFile(FSEntity entity);
 }
