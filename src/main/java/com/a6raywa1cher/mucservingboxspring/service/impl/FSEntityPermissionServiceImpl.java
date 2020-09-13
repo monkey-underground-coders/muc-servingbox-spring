@@ -7,10 +7,8 @@ import com.a6raywa1cher.mucservingboxspring.model.file.FSEntity;
 import com.a6raywa1cher.mucservingboxspring.model.file.FSEntityPermission;
 import com.a6raywa1cher.mucservingboxspring.model.repo.FSEntityPermissionRepository;
 import com.a6raywa1cher.mucservingboxspring.model.repo.FSEntityRepository;
-import com.a6raywa1cher.mucservingboxspring.model.spec.FSEntityPermissionSpecifications;
-import com.a6raywa1cher.mucservingboxspring.model.spec.FSEntitySpecifications;
 import com.a6raywa1cher.mucservingboxspring.service.FSEntityPermissionService;
-import org.springframework.data.jpa.domain.Specification;
+import com.a6raywa1cher.mucservingboxspring.service.exc.InsufficientAccessToChildrenException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -53,19 +51,10 @@ public class FSEntityPermissionServiceImpl implements FSEntityPermissionService 
 
 	@Override
 	public List<FSEntity> getAllChildrenWithAccess(FSEntity parent, User user, Boolean file, ActionType actionType) {
-		if (file == null) {
-			return entityRepository.findAll(
-				Specification
-					.where(FSEntityPermissionSpecifications.hasAccess(user, actionType))
-					.and(FSEntitySpecifications.child(parent)));
-		} else {
-			return entityRepository.findAll(
-				Specification
-					.where(FSEntityPermissionSpecifications.hasAccess(user, actionType))
-					.and(FSEntitySpecifications.child(parent))
-					.and(file ? FSEntitySpecifications.isFile() : FSEntitySpecifications.isFolder())
-			);
+		if (!repository.havePermissionToAllChildren(parent.getPath(), user.getId(), user.getUserRole(), actionType.allMasks)) {
+			throw new InsufficientAccessToChildrenException();
 		}
+		return entityRepository.findChildrenByPath(parent.getPath());
 	}
 
 	@Override

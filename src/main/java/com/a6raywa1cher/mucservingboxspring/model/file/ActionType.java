@@ -1,6 +1,7 @@
 package com.a6raywa1cher.mucservingboxspring.model.file;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public enum ActionType {
@@ -10,11 +11,12 @@ public enum ActionType {
 
 	ActionType(int mask) {
 		this.mask = mask;
-		this.allMasks = new ArrayList<>();
+		List<Integer> allMasks = new ArrayList<>();
 		for (int i = 0; i <= 0b111; i++) {
 			if ((mask & i) > 0) {
 				allMasks.add(mask);
 			}
 		}
+		this.allMasks = Collections.unmodifiableList(allMasks);
 	}
 }
