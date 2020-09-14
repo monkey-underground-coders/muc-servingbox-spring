@@ -10,11 +10,6 @@ import java.time.ZonedDateTime;
 @Entity
 @Data
 @ToString(exclude = "createdBy")
-@Table(
-	indexes = {
-		@Index(columnList = "pathSize")
-	}
-)
 @IdClass(FSEntityId.class)
 public class FSEntity {
 	@Id
@@ -45,17 +40,6 @@ public class FSEntity {
 
 	@Column
 	private long byteSize;
-
-	@Column(nullable = false)
-	private Integer pathSize;
-
-	public Integer getPathSize() {
-		return path.length();
-	}
-
-	public void setPathSize(Integer pathSize) {
-		this.pathSize = pathSize;
-	}
 
 	public boolean isFile() {
 		return isFolder != null && !isFolder;

@@ -19,9 +19,21 @@ public class FSEntityPermission {
 	private Long id;
 
 	@ManyToMany
+	@JoinTable(
+		indexes = {
+			@Index(columnList = "entities_path"),
+		}
+	)
 	private List<FSEntity> entities = new ArrayList<>();
 
 	@ManyToMany
+//	@JoinTable(
+//		joinColumns = @JoinColumn(name = "fsentity_permission_id"),
+//		inverseJoinColumns = @JoinColumn(name = "affected_users_id"),
+//		indexes = {
+//			@Index(columnList = "fsentity_permission_id, affected_users_id"),
+//		}
+//	)
 	private List<User> affectedUsers = new ArrayList<>();
 
 	@ElementCollection

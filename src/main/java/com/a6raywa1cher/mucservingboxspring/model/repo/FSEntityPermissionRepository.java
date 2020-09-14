@@ -14,17 +14,17 @@ public interface FSEntityPermissionRepository extends CrudRepository<FSEntityPer
 	@Query(nativeQuery = true,
 		value = "select case when count(*) <> 0 then true else false end\n" +
 			"from (select p.allow\n" +
-			"      from (select p.* from fsentity_permission p\n" +
-			"                inner join fsentity_permission_entities f on p.id = f.fsentity_permission_id\n" +
-			"          where f.entities_path in :paths\n" +
-			"          order by length(f.entities_path) desc) as p\n" +
+			"      from (select p.*, length(f.entities_path) as length from fsentity_permission p\n" +
+			"                                inner join fsentity_permission_entities f on p.id = f.fsentity_permission_id\n" +
+			"            where f.entities_path in :paths) as p\n" +
 			"               left join fsentity_permission_affected_users fpau on p.id = fpau.fsentity_permission_id\n" +
 			"               left join \"user\" u on u.id = fpau.affected_users_id\n" +
 			"               left join fsentity_permission_affected_user_roles fpaur on p.id = fpaur.fsentity_permission_id\n" +
 			"      where (u.id = :userId or fpaur.affected_user_roles = :userRole)\n" +
 			"        and p.mask in :allMasks\n" +
+			"      order by p.length desc\n" +
 			"      limit 1) as p\n" +
-			"where p.allow = true")
+			"where p.allow = true;")
 	boolean checkAccess(@Param("paths") List<String> paths, @Param("userId") long userId,
 						@Param("userRole") UserRole userRole, @Param("allMasks") List<Integer> allMasks);
 
@@ -47,7 +47,7 @@ public interface FSEntityPermissionRepository extends CrudRepository<FSEntityPer
 													 @Param("userRole") UserRole userRole, @Param("allMasks") List<Integer> allMasks);
 
 	@Query("select case when count(p.allow) = 1 then true else false end from FSEntityPermission p left join p.affectedUserRoles r, User u, FSEntity e " +
-		"where e.path like concat(:path, '%') and (u.id = :userId or r = :userRole)  group by p.allow")
+		"where e.path like concat(:path, '%') and (u.id = :userId or r = :userRole) and p.mask in :allMasks group by p.allow")
 	boolean havePermissionToAllChildren(@Param("path") String path, @Param("userId") long userId,
 										@Param("userRole") UserRole userRole, @Param("allMasks") List<Integer> allMasks);
 }
