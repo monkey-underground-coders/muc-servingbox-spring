@@ -12,24 +12,19 @@ import java.util.List;
 @Repository
 public interface FSEntityPermissionRepository extends CrudRepository<FSEntityPermission, Long> {
 	@Query(nativeQuery = true,
-		value = "select *\n" +
-			"from coalesce(\n" +
-			"             (select p.allow\n" +
-			"              from fsentity_permission as p\n" +
-			"                       left join fsentity_permission_affected_user_roles fpaur on p.id = fpaur.fsentity_permission_id\n" +
-			"                       left join fsentity_permission_entities fpe on p.id = fpe.fsentity_permission_id\n" +
-			"                       left join fsentity f on f.id = fpe.entities_id\n" +
-			"                       left join fsentity_permission_affected_users fpau on p.id = fpau.fsentity_permission_id\n" +
-			"                       left join \"user\" u on u.id = fpau.affected_users_id\n" +
-			"              where" +
-			" f.path in :paths\n" +
-			"                and (u.id = :userId or fpaur.affected_user_roles = :userRole)\n" +
-			"                and p.mask in :allMasks\n" +
-			"              order by f.path_size\n" +
-			"              limit 1)," +
-			" (select false as allow)\n" +
-			"    " +
-			"     ) as p;")
+		value = "select case when count(*) <> 0 then true else false end\n" +
+			"from (select p.allow\n" +
+			"      from (select p.* from fsentity_permission p\n" +
+			"                inner join fsentity_permission_entities f on p.id = f.fsentity_permission_id\n" +
+			"          where f.entities_path in :paths\n" +
+			"          order by length(f.entities_path) desc) as p\n" +
+			"               left join fsentity_permission_affected_users fpau on p.id = fpau.fsentity_permission_id\n" +
+			"               left join \"user\" u on u.id = fpau.affected_users_id\n" +
+			"               left join fsentity_permission_affected_user_roles fpaur on p.id = fpaur.fsentity_permission_id\n" +
+			"      where (u.id = :userId or fpaur.affected_user_roles = :userRole)\n" +
+			"        and p.mask in :allMasks\n" +
+			"      limit 1) as p\n" +
+			"where p.allow = true")
 	boolean checkAccess(@Param("paths") List<String> paths, @Param("userId") long userId,
 						@Param("userRole") UserRole userRole, @Param("allMasks") List<Integer> allMasks);
 

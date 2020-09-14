@@ -15,12 +15,14 @@ import java.time.ZonedDateTime;
 		@Index(columnList = "pathSize")
 	}
 )
+@IdClass(FSEntityId.class)
 public class FSEntity {
 	@Id
 	@GeneratedValue
 	private Long id;
 
-	@Column(length = 512, unique = true, nullable = false)
+	@Id
+	@Column(length = 512)
 	private String path;
 
 	@Column
