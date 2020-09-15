@@ -37,6 +37,11 @@ public class FSEntityServiceImpl implements FSEntityService {
 
 	private FSEntity createNode(String virtualPath, boolean isFolder, String diskObjectPath,
 								boolean hidden, long byteSize, User creator) {
+		return repository.save(createNodeNoSave(virtualPath, isFolder, diskObjectPath, hidden, byteSize, creator));
+	}
+
+	private FSEntity createNodeNoSave(String virtualPath, boolean isFolder, String diskObjectPath,
+									  boolean hidden, long byteSize, User creator) {
 		FSEntity fsEntity = new FSEntity();
 		fsEntity.setPath(virtualPath);
 		fsEntity.setIsFolder(isFolder);
@@ -46,7 +51,7 @@ public class FSEntityServiceImpl implements FSEntityService {
 		fsEntity.setCreatedTimestamp(ZonedDateTime.now());
 		fsEntity.setModifiedTimestamp(ZonedDateTime.now());
 		fsEntity.setByteSize(byteSize);
-		return repository.save(fsEntity);
+		return fsEntity
 	}
 
 	private void createFullPermissions(FSEntity fsEntity, User user) {
@@ -180,6 +185,25 @@ public class FSEntityServiceImpl implements FSEntityService {
 						entity.getCreatedBy());
 				});
 			return parent;
+		}
+	}
+
+	@Override
+	public FSEntity moveEntity(FSEntity object, FSEntity parent, String name, boolean hidden, User creator) {
+		if (object.isFile()) {
+			String prevVirtualPath = object.getPath();
+			String filename = prevVirtualPath.substring(prevVirtualPath.lastIndexOf('/'));
+			String newVirtualPath = parent.getPath() + filename;
+			FSEntity newEntity = createNode(newVirtualPath,
+				false,
+				object.getDiskObjectPath(),
+				hidden,
+				object.getByteSize(),
+				creator);
+			repository.delete(object);
+			return newEntity;
+		} else {
+
 		}
 	}
 

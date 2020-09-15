@@ -31,5 +31,8 @@ public interface FSEntityService {
 	FSEntity copyEntity(FSEntity object, FSEntity parent, String name,
 						boolean hidden, User creator);
 
+	FSEntity moveEntity(FSEntity object, FSEntity parent, String name,
+						boolean hidden, User creator);
+
 	void deleteFile(FSEntity entity);
 }
