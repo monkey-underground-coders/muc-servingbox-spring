@@ -6,9 +6,9 @@ app:
   temporary-user-access-duration: P1D
   temporary-user-name: "Временный ученик #%s"
   first-admin:
-    username:
-    name:
-    password:
+    username: admin
+    name: admin
+    password: admin
 jwt:
   max-refresh-tokens-per-user: 5
   secret: fill-me-later
@@ -24,14 +24,14 @@ spring.servlet.multipart.max-request-size: 100MB
 # ===============================
 # DB CONNECTION
 # ===============================
-spring.datasource.url: # REQUIRED database jdbc url
-spring.datasource.username: # REQUIRED database username
-spring.datasource.password: # REQUIRED database password
+spring.datasource.url: # REQUIRED test database jdbc url
+spring.datasource.username: # REQUIRED test database username
+spring.datasource.password: # REQUIRED test database password
 # ===============================
 # JPA / HIBERNATE
 # ===============================
-spring.jpa.show-sql: false
-spring.jpa.hibernate.ddl-auto: update
+spring.jpa.show-sql: true
+spring.jpa.hibernate.ddl-auto: create
 spring.jpa.properties.hibernate.default_schema: public
 spring.jpa.properties.hibernate.dialect: com.a6raywa1cher.mucservingboxspring.utils.hibernate.PostgreSqlDialectFixed
 spring.jpa.properties.hibernate.current_session_context_class: org.springframework.orm.hibernate5.SpringSessionContext

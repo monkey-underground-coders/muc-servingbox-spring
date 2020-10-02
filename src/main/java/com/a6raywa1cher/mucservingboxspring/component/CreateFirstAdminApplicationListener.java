@@ -1,6 +1,8 @@
 package com.a6raywa1cher.mucservingboxspring.component;
 
+import com.a6raywa1cher.mucservingboxspring.model.User;
 import com.a6raywa1cher.mucservingboxspring.model.UserRole;
+import com.a6raywa1cher.mucservingboxspring.service.FSEntityService;
 import com.a6raywa1cher.mucservingboxspring.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,20 +23,24 @@ public class CreateFirstAdminApplicationListener implements ApplicationListener<
 
 	private final UserService userService;
 
+	private final FSEntityService fsEntityService;
+
 	public CreateFirstAdminApplicationListener(@Value("${app.first-admin.username}") String username,
 											   @Value("${app.first-admin.name}") String name,
 											   @Value("${app.first-admin.password}") String password,
-											   UserService userService) {
+											   UserService userService, FSEntityService fsEntityService) {
 		this.username = username;
 		this.name = name;
 		this.password = password;
 		this.userService = userService;
+		this.fsEntityService = fsEntityService;
 	}
 
 	@Override
 	public void onApplicationEvent(ApplicationReadyEvent event) {
 		if (userService.findFirstByUserRole(UserRole.ADMIN).isEmpty()) {
-			userService.create(UserRole.ADMIN, username, name, password, "localhost");
+			User firstAdmin = userService.create(UserRole.ADMIN, username, name, password, "localhost");
+			fsEntityService.createNewHome(firstAdmin);
 			logger.info("Created admin-user");
 		}
 	}

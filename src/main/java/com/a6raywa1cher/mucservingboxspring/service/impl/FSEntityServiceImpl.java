@@ -40,6 +40,10 @@ public class FSEntityServiceImpl implements FSEntityService {
 		return repository.save(createNodeNoSave(virtualPath, isFolder, diskObjectPath, hidden, byteSize, creator));
 	}
 
+	private static URI resolveBetweenParents(URI originalParent, URI targetParent, URI entityUri) {
+		return targetParent.resolve(originalParent.relativize(entityUri));
+	}
+
 	private FSEntity createNodeNoSave(String virtualPath, boolean isFolder, String diskObjectPath,
 									  boolean hidden, long byteSize, User creator) {
 		FSEntity fsEntity = new FSEntity();
@@ -51,23 +55,12 @@ public class FSEntityServiceImpl implements FSEntityService {
 		fsEntity.setCreatedTimestamp(ZonedDateTime.now());
 		fsEntity.setModifiedTimestamp(ZonedDateTime.now());
 		fsEntity.setByteSize(byteSize);
-		return fsEntity
+		return fsEntity;
 	}
 
 	private void createFullPermissions(FSEntity fsEntity, User user) {
 		permissionService.create(Collections.singletonList(fsEntity), Collections.singletonList(user),
-			new ArrayList<>(), true, true, List.of(ActionType.values()));
-	}
-
-	@Override
-	public FSEntity createNewHome(User creator) {
-		FSEntity fsEntity = createNode('/' + creator.getId() + "/home/",
-			true,
-			null,
-			false,
-			0, creator);
-		createFullPermissions(fsEntity, creator);
-		return fsEntity;
+			new ArrayList<>(), true, List.of(ActionType.values()));
 	}
 
 	@Override
@@ -144,6 +137,17 @@ public class FSEntityServiceImpl implements FSEntityService {
 	}
 
 	@Override
+	public FSEntity createNewHome(User creator) {
+		FSEntity fsEntity = createNode("/user_home/" + creator.getId() + '/',
+			true,
+			null,
+			false,
+			0, creator);
+		createFullPermissions(fsEntity, creator);
+		return fsEntity;
+	}
+
+	@Override
 	public FSEntity copyEntity(FSEntity object, FSEntity parent, String name,
 							   boolean hidden, User creator) {
 		if (object.isFile()) {
@@ -164,26 +168,25 @@ public class FSEntityServiceImpl implements FSEntityService {
 		} else {
 			URI originalParent = URI.create(object.getPath());
 			URI targetParent = URI.create(parent.getPath());
-			List<FSEntity> fsEntities = permissionService.getAllChildrenWithAccess(object, creator, null, ActionType.READ);
+			List<FSEntity> fsEntities = permissionService.getAllChildrenWithAccess(object, creator, ActionType.READ);
 			List<FSEntity> files = fsEntities.stream().filter(FSEntity::isFile).collect(Collectors.toList());
 			Map<Path, Pair<Path, Long>> prevPathToNewPathAndSize =
 				diskService.copyFiles(files.stream().map(FSEntity::getPath).map(Path::of).collect(Collectors.toList()));
 			if (prevPathToNewPathAndSize == null) {
 				return null;
 			}
-			fsEntities.stream()
-				.forEach(entity -> {
-					URI newPath = targetParent.resolve(originalParent.relativize(URI.create(entity.getPath())));
-					Pair<Path, Long> pair = entity.isFile() ?
-						prevPathToNewPathAndSize.get(Path.of(entity.getDiskObjectPath())) :
-						null;
-					createNode(newPath.toString(),
-						entity.isFolder(),
-						pair != null ? pair.getFirst().toString() : null,
-						entity.getHidden(),
-						pair != null ? pair.getSecond() : 0,
-						entity.getCreatedBy());
-				});
+			fsEntities.forEach(entity -> {
+				URI newPath = resolveBetweenParents(originalParent, targetParent, URI.create(entity.getPath()));
+				Pair<Path, Long> pair = entity.isFile() ?
+					prevPathToNewPathAndSize.get(Path.of(entity.getDiskObjectPath())) :
+					null;
+				createNode(newPath.toString(),
+					entity.isFolder(),
+					pair != null ? pair.getFirst().toString() : null,
+					entity.getHidden(),
+					pair != null ? pair.getSecond() : 0,
+					entity.getCreatedBy());
+			});
 			return parent;
 		}
 	}
@@ -203,7 +206,19 @@ public class FSEntityServiceImpl implements FSEntityService {
 			repository.delete(object);
 			return newEntity;
 		} else {
-
+			URI originalParent = URI.create(object.getPath());
+			URI targetParent = URI.create(parent.getPath());
+			List<FSEntity> fsEntities = permissionService.getAllChildrenWithAccess(object, creator, ActionType.READ);
+			fsEntities.forEach(entity -> {
+				URI newPath = resolveBetweenParents(originalParent, targetParent, URI.create(entity.getPath()));
+				createNode(newPath.getPath(),
+					entity.isFolder(),
+					entity.getDiskObjectPath(),
+					entity.getHidden(),
+					entity.getByteSize(),
+					entity.getCreatedBy());
+			});
+			return parent;
 		}
 	}
 
@@ -212,7 +227,7 @@ public class FSEntityServiceImpl implements FSEntityService {
 	public void deleteFile(FSEntity entity) {
 		if (entity.isFile()) {
 			diskService.deleteFile(Path.of(entity.getDiskObjectPath()));
-			permissionService.delete(permissionService.getByFSEntity(entity));
+			permissionService.delete(permissionService.getChildrenByFSEntity(entity));
 			repository.delete(entity);
 		} else {
 			diskService.deleteFiles(repository.findChildrenFilesByPath(entity.getPath()).parallelStream()

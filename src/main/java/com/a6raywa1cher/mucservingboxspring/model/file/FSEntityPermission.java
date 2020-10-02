@@ -7,6 +7,8 @@ import lombok.Data;
 import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Entity
 @Data
@@ -40,11 +42,21 @@ public class FSEntityPermission {
 	private List<UserRole> affectedUserRoles = new ArrayList<>();
 
 	@Column(nullable = false)
-	private Boolean allow;
-
-	@Column(nullable = false)
 	private Boolean applicationDefined;
 
 	@Column(nullable = false)
 	private Integer mask;
+
+	@Transient
+	public List<ActionType> getActionTypes() {
+		int mask = this.getMask();
+		return Stream.of(ActionType.values())
+			.filter(t -> (mask & t.mask) > 0)
+			.collect(Collectors.toList());
+	}
+
+	@Transient
+	public void setActionTypes(List<ActionType> actionTypes) {
+		setMask(actionTypes.stream().reduce(0, (i, a) -> i | a.mask, (i1, i2) -> i1 | i2));
+	}
 }

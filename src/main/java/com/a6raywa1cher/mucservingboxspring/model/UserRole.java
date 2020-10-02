@@ -10,6 +10,6 @@ public enum UserRole {
 
 	UserRole(UserRole... accessTo) {
 		this.access =
-			Stream.concat(Stream.of(accessTo), Stream.of(this)).collect(Collectors.toUnmodifiableSet());
+			Stream.of(accessTo).collect(Collectors.toUnmodifiableSet());
 	}
 }

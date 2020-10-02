@@ -35,7 +35,7 @@ public class UserServiceImpl implements UserService {
 	}
 
 	private int extractNumber(String name) {
-		return Integer.parseInt(name.substring(name.lastIndexOf('#')));
+		return Integer.parseInt(name.substring(name.lastIndexOf('#') + 1));
 	}
 
 	@Override
@@ -66,7 +66,7 @@ public class UserServiceImpl implements UserService {
 		user.setCreatedAt(ZonedDateTime.now());
 		user.setCreatedIp(registrationIp);
 		user.setLastVisitAt(ZonedDateTime.now());
-		return user;
+		return repository.save(user);
 	}
 
 	@Override

@@ -14,7 +14,7 @@ public enum ActionType {
 		List<Integer> allMasks = new ArrayList<>();
 		for (int i = 0; i <= 0b111; i++) {
 			if ((mask & i) > 0) {
-				allMasks.add(mask);
+				allMasks.add(i);
 			}
 		}
 		this.allMasks = Collections.unmodifiableList(allMasks);
