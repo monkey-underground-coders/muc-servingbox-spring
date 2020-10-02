@@ -72,12 +72,12 @@ public class FSEntityPermissionServiceImpl implements FSEntityPermissionService 
 		if (user.getUserRole().access.contains(fsEntity.getCreatedBy().getUserRole())) {
 			return true;
 		}
-		return repository.checkAccess(getUpperLevels(fsEntity.getPath()), user.getId(), user.getUserRole().ordinal(), type.allMasks);
+		return repository.checkAccess(getUpperLevels(fsEntity.getPath()), user.getId(), user.getUserRole(), type.allMasks);
 	}
 
 	@Override
 	public List<FSEntity> getAllChildrenWithAccess(FSEntity parent, User user, ActionType actionType) {
-		if (!repository.checkAccess(getUpperLevels(parent.getPath()), user.getId(), user.getUserRole().ordinal(), actionType.allMasks)) {
+		if (!repository.checkAccess(getUpperLevels(parent.getPath()), user.getId(), user.getUserRole(), actionType.allMasks)) {
 			throw new InsufficientAccessToChildrenException();
 		}
 		return entityRepository.findChildrenByPath(parent.getPath());

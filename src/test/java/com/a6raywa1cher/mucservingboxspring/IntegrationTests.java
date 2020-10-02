@@ -68,16 +68,20 @@ public class IntegrationTests {
 
 	@Test
 	public void homeAccessCorrect() {
+		long start = System.currentTimeMillis();
 		FSEntity home = fsEntityService.getByPath(String.format("/user_home/%d/", student1.getId())).orElseThrow();
 
 		checkPermissions(home, student1, true, true, true);
 		checkPermissions(home, teacher, false, false, false);
 		checkPermissions(home, admin, true, true, true);
 		checkPermissions(home, student2, false, false, false);
+		log.info("homeAccessCorrect {}ms", System.currentTimeMillis() - start);
 	}
 
 	@Test
 	public void nestedPermissionsCheckCorrect() {
+		long start = System.currentTimeMillis();
+		log.info("start nestedPermissionsCheckCorrect");
 		FSEntity publicFolder = fsEntityService.createNewFolder(
 			teacherHome,
 			"public",
@@ -135,6 +139,7 @@ public class IntegrationTests {
 		checkPermissions(publicFolder, teacher2, false, false, false);
 
 		checkPermissions(publicFile2, teacher2, true, true, false);
+		log.info("homeAccessCorrect {}ms", System.currentTimeMillis() - start);
 	}
 
 	private void checkPermissions(FSEntity entity, User user, boolean read, boolean write, boolean managePermissions) {

@@ -2,7 +2,7 @@
 app:
   version: '@project.version@'
   cors-allowed-origins: [ "*" ]
-  upload-dir:
+  upload-dir: "./test-container/"
   temporary-user-access-duration: P1D
   temporary-user-name: "Временный ученик #%s"
   first-admin:
@@ -24,15 +24,17 @@ spring.servlet.multipart.max-request-size: 100MB
 # ===============================
 # DB CONNECTION
 # ===============================
-spring.datasource.url: # REQUIRED test database jdbc url
-spring.datasource.username: # REQUIRED test database username
-spring.datasource.password: # REQUIRED test database password
+spring.datasource.url: jdbc:h2:mem:myDb;DB_CLOSE_DELAY=-1
+spring.datasource.username: h2
+spring.datasource.password: h2
 # ===============================
 # JPA / HIBERNATE
 # ===============================
-spring.jpa.show-sql: true
+logging.level.org.hibernate.SQL: debug
+logging.level.org.hibernate.type: trace
 spring.jpa.hibernate.ddl-auto: create
 spring.jpa.properties.hibernate.default_schema: public
 spring.jpa.properties.hibernate.dialect: com.a6raywa1cher.mucservingboxspring.utils.hibernate.PostgreSqlDialectFixed
 spring.jpa.properties.hibernate.current_session_context_class: org.springframework.orm.hibernate5.SpringSessionContext
 spring.jpa.properties.hibernate.temp.use_jdbc_metadata_defaults: false
+spring.jpa.properties.hibernate.format_sql: true

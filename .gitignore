@@ -33,6 +33,6 @@ build/
 .vscode/
 
 application-*.yml
-!application-test-template.yml
+!application-test.yml
 container
 test-container
