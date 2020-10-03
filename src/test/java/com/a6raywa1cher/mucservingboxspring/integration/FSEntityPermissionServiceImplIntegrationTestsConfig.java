@@ -1,4 +1,4 @@
-package com.a6raywa1cher.mucservingboxspring;
+package com.a6raywa1cher.mucservingboxspring.integration;
 
 import com.a6raywa1cher.mucservingboxspring.service.DiskService;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -13,7 +13,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @TestConfiguration
-public class IntegrationTestsConfig {
+public class FSEntityPermissionServiceImplIntegrationTestsConfig {
 	@Bean
 	public DiskService diskService() {
 		DiskService mock = mock(DiskService.class);

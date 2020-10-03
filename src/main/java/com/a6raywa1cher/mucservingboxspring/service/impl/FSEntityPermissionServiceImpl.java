@@ -80,7 +80,7 @@ public class FSEntityPermissionServiceImpl implements FSEntityPermissionService 
 		if (!repository.checkAccess(getUpperLevels(parent.getPath()), user.getId(), user.getUserRole(), actionType.allMasks)) {
 			throw new InsufficientAccessToChildrenException();
 		}
-		return entityRepository.findChildrenByPath(parent.getPath());
+		return entityRepository.getTreeByPath(parent.getPath());
 	}
 
 	@Override
@@ -93,13 +93,9 @@ public class FSEntityPermissionServiceImpl implements FSEntityPermissionService 
 		repository.deleteAll(list);
 	}
 
-	@Override
-	public void deletePermissionsFor(FSEntity parent) {
-		repository.deleteAll(repository.getAllByPath(parent.getPath()));
-	}
 
 	@Override
 	public void deletePermissionsTreeFor(FSEntity parent) {
-
+		repository.deleteAll(repository.getAllByPath(parent.getPath()));
 	}
 }

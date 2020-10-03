@@ -29,7 +29,5 @@ public interface FSEntityPermissionService {
 
 	void delete(List<FSEntityPermission> list);
 
-	void deletePermissionsFor(FSEntity parent);
-
 	void deletePermissionsTreeFor(FSEntity parent);
 }

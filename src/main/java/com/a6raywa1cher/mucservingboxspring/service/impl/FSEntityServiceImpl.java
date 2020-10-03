@@ -20,6 +20,7 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.time.ZonedDateTime;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 @Service
@@ -167,36 +168,38 @@ public class FSEntityServiceImpl implements FSEntityService {
 			);
 		} else {
 			URI originalParent = URI.create(object.getPath());
-			URI targetParent = URI.create(parent.getPath());
-			List<FSEntity> fsEntities = permissionService.getAllChildrenWithAccess(object, creator, ActionType.READ);
+			URI targetParent = URI.create(parent.getPath()).resolve(name + '/');
+			List<FSEntity> fsEntities = repository.getTreeByPath(object.getPath());
 			List<FSEntity> files = fsEntities.stream().filter(FSEntity::isFile).collect(Collectors.toList());
 			Map<Path, Pair<Path, Long>> prevPathToNewPathAndSize =
-				diskService.copyFiles(files.stream().map(FSEntity::getPath).map(Path::of).collect(Collectors.toList()));
+				diskService.copyFiles(files.stream().map(FSEntity::getDiskObjectPath).map(Path::of).collect(Collectors.toList()));
 			if (prevPathToNewPathAndSize == null) {
 				return null;
 			}
+			AtomicReference<FSEntity> out = new AtomicReference<>();
 			fsEntities.forEach(entity -> {
 				URI newPath = resolveBetweenParents(originalParent, targetParent, URI.create(entity.getPath()));
 				Pair<Path, Long> pair = entity.isFile() ?
 					prevPathToNewPathAndSize.get(Path.of(entity.getDiskObjectPath())) :
 					null;
-				createNode(newPath.toString(),
+				FSEntity node = createNode(newPath.toString(),
 					entity.isFolder(),
 					pair != null ? pair.getFirst().toString() : null,
 					entity.getHidden(),
 					pair != null ? pair.getSecond() : 0,
 					entity.getCreatedBy());
+				if (entity.getPath().equals(object.getPath())) {
+					out.set(node);
+				}
 			});
-			return parent;
+			return out.get();
 		}
 	}
 
 	@Override
 	public FSEntity moveEntity(FSEntity object, FSEntity parent, String name, boolean hidden, User creator) {
 		if (object.isFile()) {
-			String prevVirtualPath = object.getPath();
-			String filename = prevVirtualPath.substring(prevVirtualPath.lastIndexOf('/'));
-			String newVirtualPath = parent.getPath() + filename;
+			String newVirtualPath = parent.getPath() + name;
 			FSEntity newEntity = createNode(newVirtualPath,
 				false,
 				object.getDiskObjectPath(),
@@ -204,37 +207,44 @@ public class FSEntityServiceImpl implements FSEntityService {
 				object.getByteSize(),
 				creator);
 			repository.delete(object);
+			permissionService.deletePermissionsTreeFor(object);
 			return newEntity;
 		} else {
 			URI originalParent = URI.create(object.getPath());
-			URI targetParent = URI.create(parent.getPath());
-			List<FSEntity> fsEntities = permissionService.getAllChildrenWithAccess(object, creator, ActionType.READ);
+			URI targetParent = URI.create(parent.getPath()).resolve(name + '/');
+			List<FSEntity> fsEntities = repository.getTreeByPath(object.getPath());
+			AtomicReference<FSEntity> out = new AtomicReference<>();
 			fsEntities.forEach(entity -> {
 				URI newPath = resolveBetweenParents(originalParent, targetParent, URI.create(entity.getPath()));
-				createNode(newPath.getPath(),
+				FSEntity node = createNode(newPath.getPath(),
 					entity.isFolder(),
 					entity.getDiskObjectPath(),
 					entity.getHidden(),
 					entity.getByteSize(),
 					entity.getCreatedBy());
+				if (entity.getPath().equals(object.getPath())) {
+					out.set(node);
+				}
 			});
-			return parent;
+			repository.deleteAllTree(object.getPath());
+			permissionService.deletePermissionsTreeFor(object);
+			return out.get();
 		}
 	}
 
 	@Override
 	@Transactional(rollbackFor = RuntimeException.class)
-	public void deleteFile(FSEntity entity) {
+	public void deleteEntity(FSEntity entity) {
 		if (entity.isFile()) {
 			diskService.deleteFile(Path.of(entity.getDiskObjectPath()));
-			permissionService.delete(permissionService.getChildrenByFSEntity(entity));
+			permissionService.deletePermissionsTreeFor(entity);
 			repository.delete(entity);
 		} else {
-			diskService.deleteFiles(repository.findChildrenFilesByPath(entity.getPath()).parallelStream()
+			diskService.deleteFiles(repository.getFilesTreeByPath(entity.getPath()).stream()
 				.map(s -> Path.of(s.getDiskObjectPath()))
 				.collect(Collectors.toList()));
 			permissionService.deletePermissionsTreeFor(entity);
-			repository.deleteAllChildren(entity.getPath());
+			repository.deleteAllTree(entity.getPath());
 		}
 	}
 }

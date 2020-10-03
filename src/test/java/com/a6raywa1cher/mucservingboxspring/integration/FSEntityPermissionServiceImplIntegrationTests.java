@@ -1,4 +1,4 @@
-package com.a6raywa1cher.mucservingboxspring;
+package com.a6raywa1cher.mucservingboxspring.integration;
 
 import com.a6raywa1cher.mucservingboxspring.model.User;
 import com.a6raywa1cher.mucservingboxspring.model.UserRole;
@@ -29,11 +29,11 @@ import static org.mockito.Mockito.mock;
 
 @SpringBootTest
 @RunWith(SpringJUnit4ClassRunner.class)
-@Import(IntegrationTestsConfig.class)
+@Import(FSEntityPermissionServiceImplIntegrationTestsConfig.class)
 @TestPropertySource(properties = {"spring.config.location=classpath:application-test.yml"})
 @Transactional
 @Slf4j
-public class IntegrationTests {
+public class FSEntityPermissionServiceImplIntegrationTests {
 	@Autowired
 	FSEntityPermissionService permissionService;
 	@Autowired
