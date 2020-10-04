@@ -28,7 +28,7 @@ public class FSEntityPermission {
 	)
 	private List<FSEntity> entities = new ArrayList<>();
 
-	@ManyToMany
+	@ManyToMany(fetch = FetchType.EAGER)
 //	@JoinTable(
 //		joinColumns = @JoinColumn(name = "fsentity_permission_id"),
 //		inverseJoinColumns = @JoinColumn(name = "affected_users_id"),

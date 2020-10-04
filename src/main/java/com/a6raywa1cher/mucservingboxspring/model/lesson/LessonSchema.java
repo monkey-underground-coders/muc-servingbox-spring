@@ -24,4 +24,7 @@ public class LessonSchema {
 
 	@OneToOne
 	private FSEntity genericFiles;
+
+	@Column
+	private boolean onTheFly;
 }

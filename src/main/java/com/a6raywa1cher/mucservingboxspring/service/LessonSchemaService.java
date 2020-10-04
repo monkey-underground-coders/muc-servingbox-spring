@@ -11,11 +11,17 @@ import java.util.Optional;
 public interface LessonSchemaService {
 	LessonSchema create(String title, String description, User creator);
 
+	LessonSchema createOnFly(User creator);
+
 	Optional<LessonSchema> getById(Long id);
 
 	Page<LessonSchema> getPage(List<String> searchWords, Pageable pageable);
 
+	Page<LessonSchema> getPage(List<String> searchWords, User creator, Pageable pageable);
+
 	LessonSchema editSchema(LessonSchema lessonSchema, String title, String description);
+
+	LessonSchema cloneSchema(LessonSchema lessonSchema, User user);
 
 	void deleteSchema(LessonSchema lessonSchema);
 }

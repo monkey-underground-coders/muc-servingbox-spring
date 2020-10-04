@@ -168,7 +168,7 @@ public class FSEntityServiceImpl implements FSEntityService {
 			);
 		} else {
 			URI originalParent = URI.create(object.getPath());
-			URI targetParent = URI.create(parent.getPath()).resolve(name + '/');
+			URI targetParent = name != null ? URI.create(parent.getPath()).resolve(name + '/') : URI.create(parent.getPath());
 			List<FSEntity> fsEntities = repository.getTreeByPath(object.getPath());
 			List<FSEntity> files = fsEntities.stream().filter(FSEntity::isFile).collect(Collectors.toList());
 			Map<Path, Pair<Path, Long>> prevPathToNewPathAndSize =
@@ -194,6 +194,11 @@ public class FSEntityServiceImpl implements FSEntityService {
 			});
 			return out.get();
 		}
+	}
+
+	@Override
+	public FSEntity copyFolderContent(FSEntity object, FSEntity parent, boolean hidden, User creator) {
+		return copyEntity(object, parent, null, hidden, creator);
 	}
 
 	@Override

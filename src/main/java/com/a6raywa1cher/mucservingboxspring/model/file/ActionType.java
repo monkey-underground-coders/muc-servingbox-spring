@@ -12,7 +12,7 @@ public enum ActionType {
 	ActionType(int mask) {
 		this.mask = mask;
 		List<Integer> allMasks = new ArrayList<>();
-		for (int i = 0; i <= 0b111; i++) {
+		for (int i = 1; i <= 0b111; i++) {
 			if ((mask & i) > 0) {
 				allMasks.add(i);
 			}

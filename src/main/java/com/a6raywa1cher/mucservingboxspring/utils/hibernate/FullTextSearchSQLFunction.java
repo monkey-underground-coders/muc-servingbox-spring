@@ -10,6 +10,10 @@ import org.hibernate.type.Type;
 import java.util.List;
 
 public class FullTextSearchSQLFunction implements SQLFunction {
+	public static String searchWordsToQueryParam(List<String> searchWords) {
+		return String.join(" & ", searchWords);
+	}
+
 	@Override
 	public Type getReturnType(Type columnType, Mapping mapping)
 		throws QueryException {

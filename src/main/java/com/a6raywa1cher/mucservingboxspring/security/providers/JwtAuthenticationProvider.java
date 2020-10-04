@@ -7,6 +7,7 @@ import com.a6raywa1cher.mucservingboxspring.security.authentication.JwtAuthentic
 import com.a6raywa1cher.mucservingboxspring.security.jwt.JwtToken;
 import com.a6raywa1cher.mucservingboxspring.security.jwt.service.BlockedRefreshTokensService;
 import com.a6raywa1cher.mucservingboxspring.service.UserService;
+import org.springframework.security.authentication.AccountExpiredException;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.CredentialsExpiredException;
@@ -17,6 +18,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -51,7 +53,11 @@ public class JwtAuthenticationProvider implements AuthenticationProvider {
 			customAuthentication.setAuthenticated(false);
 			throw new UsernameNotFoundException(String.format("User %d doesn't exists", userId));
 		}
-		UserRole userRole = byId.get().getUserRole();
+		User user = byId.get();
+		if (!user.isEnabled()) {
+			throw new AccountExpiredException(String.format("Account %d expired at %s", user.getId(), user.getExpiringAt().format(DateTimeFormatter.ISO_INSTANT)));
+		}
+		UserRole userRole = user.getUserRole();
 		Set<GrantedAuthority> authoritySet = userRole.access.stream()
 			.map(role -> new SimpleGrantedAuthority("ROLE_" + role.name()))
 			.collect(Collectors.toUnmodifiableSet());
