@@ -159,11 +159,13 @@ public class DiskServiceImpl implements DiskService {
 
 	@Override
 	public File resolve(Path path) {
+		throwIfLock(path);
 		return root.resolve(path).toFile();
 	}
 
 	@Override
 	public Resource resolveAsResource(Path path) {
+		throwIfLock(path);
 		return new PathResource(resolve(path).toPath());
 	}
 
@@ -185,5 +187,9 @@ public class DiskServiceImpl implements DiskService {
 				return null;
 			})
 			.collect(Collectors.toList()));
+	}
+
+	private void throwIfLock(Path path) {
+		if (busyFiles.contains(path)) throw new ResourceBusyException();
 	}
 }

@@ -15,6 +15,10 @@ public interface UserService {
 
 	Optional<User> getByUsername(String username);
 
+	User editUser(User user, UserRole userRole, String username, String name);
+
+	User editPassword(User user, String password);
+
 	User setLastVisitAt(User user, ZonedDateTime at);
 
 	Optional<User> findFirstByUserRole(UserRole role);
