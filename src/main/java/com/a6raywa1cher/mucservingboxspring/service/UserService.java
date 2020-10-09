@@ -22,4 +22,6 @@ public interface UserService {
 	User setLastVisitAt(User user, ZonedDateTime at);
 
 	Optional<User> findFirstByUserRole(UserRole role);
+
+	void deleteUser(User user);
 }

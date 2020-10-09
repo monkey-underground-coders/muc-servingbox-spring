@@ -1,7 +1,10 @@
 package com.a6raywa1cher.mucservingboxspring.rest;
 
 import com.a6raywa1cher.mucservingboxspring.model.User;
+import com.a6raywa1cher.mucservingboxspring.model.UserRole;
+import com.a6raywa1cher.mucservingboxspring.rest.exc.UnacceptableRequestTowardsTemporaryUserException;
 import com.a6raywa1cher.mucservingboxspring.rest.req.ChangeNameOfUserRequest;
+import com.a6raywa1cher.mucservingboxspring.rest.req.ChangePasswordRequest;
 import com.a6raywa1cher.mucservingboxspring.rest.req.CreateUserRequest;
 import com.a6raywa1cher.mucservingboxspring.service.UserService;
 import com.a6raywa1cher.mucservingboxspring.utils.LocalHtmlUtils;
@@ -49,5 +52,27 @@ public class UserController {
 			LocalHtmlUtils.htmlEscape(request.getName())));
 	}
 
+	@PostMapping("/{uid:[0-9]+}/edit_password")
+	public ResponseEntity<User> editPassword(@RequestBody @Valid ChangePasswordRequest request, @PathVariable long uid) {
+		Optional<User> optional = userService.getById(uid);
+		if (optional.isEmpty()) {
+			return ResponseEntity.notFound().build();
+		}
+		User user = optional.get();
+		if (user.getUserRole() == UserRole.TEMPORARY_USER) {
+			throw new UnacceptableRequestTowardsTemporaryUserException();
+		}
+		return ResponseEntity.ok(userService.editPassword(user, request.getPassword()));
+	}
 
+	@DeleteMapping("/{uid:[0-9]+}")
+	public ResponseEntity<Void> delete(@PathVariable long uid) {
+		Optional<User> optional = userService.getById(uid);
+		if (optional.isEmpty()) {
+			return ResponseEntity.notFound().build();
+		}
+		User user = optional.get();
+		userService.deleteUser(user);
+		return ResponseEntity.ok().build();
+	}
 }

@@ -80,6 +80,19 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
+	public User editUser(User user, UserRole userRole, String username, String name) {
+		user.setUsername(username);
+		user.setName(name);
+		return repository.save(user);
+	}
+
+	@Override
+	public User editPassword(User user, String password) {
+		user.setPassword(passwordEncoder.encode(password));
+		return repository.save(user);
+	}
+
+	@Override
 	public User setLastVisitAt(User user, ZonedDateTime at) {
 		user.setLastVisitAt(at);
 		return repository.save(user);
@@ -88,5 +101,10 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public Optional<User> findFirstByUserRole(UserRole role) {
 		return repository.findFirstByUserRole(role);
+	}
+
+	@Override
+	public void deleteUser(User user) {
+		repository.delete(user);
 	}
 }

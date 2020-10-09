@@ -8,7 +8,6 @@ import com.a6raywa1cher.mucservingboxspring.model.file.FSEntityPermission;
 import com.a6raywa1cher.mucservingboxspring.model.repo.FSEntityPermissionRepository;
 import com.a6raywa1cher.mucservingboxspring.model.repo.FSEntityRepository;
 import com.a6raywa1cher.mucservingboxspring.service.FSEntityPermissionService;
-import com.a6raywa1cher.mucservingboxspring.service.exc.InsufficientAccessToChildrenException;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -77,9 +76,9 @@ public class FSEntityPermissionServiceImpl implements FSEntityPermissionService 
 
 	@Override
 	public List<FSEntity> getAllChildrenWithAccess(FSEntity parent, User user, ActionType actionType) {
-		if (!repository.checkAccess(getUpperLevels(parent.getPath()), user.getId(), user.getUserRole(), actionType.allMasks)) {
-			throw new InsufficientAccessToChildrenException();
-		}
+//		if (!repository.checkAccess(getUpperLevels(parent.getPath()), user.getId(), user.getUserRole(), actionType.allMasks)) {
+//			throw new InsufficientAccessToChildrenException();
+//		}
 		return entityRepository.getTreeByPath(parent.getPath());
 	}
 
