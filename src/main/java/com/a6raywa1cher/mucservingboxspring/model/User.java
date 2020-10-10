@@ -1,5 +1,6 @@
 package com.a6raywa1cher.mucservingboxspring.model;
 
+import com.a6raywa1cher.mucservingboxspring.model.file.FSEntity;
 import com.a6raywa1cher.mucservingboxspring.model.lesson.LessonSchema;
 import com.a6raywa1cher.mucservingboxspring.utils.Views;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -54,6 +55,10 @@ public class User {
 	@Column
 	@JsonView(Views.Internal.class)
 	private ZonedDateTime lastVisitAt;
+
+	@OneToOne
+	@JsonView(Views.Internal.class)
+	private FSEntity rootFolder;
 
 	@Transient
 	@JsonView(Views.Public.class)

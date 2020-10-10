@@ -1,6 +1,7 @@
-package com.a6raywa1cher.mucservingboxspring.utils;
+package com.a6raywa1cher.mucservingboxspring.utils.resolver;
 
 import com.a6raywa1cher.mucservingboxspring.model.User;
+import com.a6raywa1cher.mucservingboxspring.utils.AuthenticationResolver;
 import org.springframework.core.MethodParameter;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;

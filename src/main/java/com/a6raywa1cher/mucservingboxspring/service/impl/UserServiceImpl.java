@@ -2,6 +2,7 @@ package com.a6raywa1cher.mucservingboxspring.service.impl;
 
 import com.a6raywa1cher.mucservingboxspring.model.User;
 import com.a6raywa1cher.mucservingboxspring.model.UserRole;
+import com.a6raywa1cher.mucservingboxspring.model.file.FSEntity;
 import com.a6raywa1cher.mucservingboxspring.model.repo.UserRepository;
 import com.a6raywa1cher.mucservingboxspring.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -89,6 +90,12 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public User editPassword(User user, String password) {
 		user.setPassword(passwordEncoder.encode(password));
+		return repository.save(user);
+	}
+
+	@Override
+	public User editRootFolder(User user, FSEntity root) {
+		user.setRootFolder(root);
 		return repository.save(user);
 	}
 

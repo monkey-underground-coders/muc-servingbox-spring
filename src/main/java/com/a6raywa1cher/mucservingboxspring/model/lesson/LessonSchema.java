@@ -16,7 +16,7 @@ public class LessonSchema {
 	@Column
 	private String title;
 
-	@Column
+	@Lob
 	private String description;
 
 	@ManyToOne

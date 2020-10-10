@@ -6,6 +6,7 @@ import com.a6raywa1cher.mucservingboxspring.rest.exc.UnacceptableRequestTowardsT
 import com.a6raywa1cher.mucservingboxspring.rest.req.ChangeNameOfUserRequest;
 import com.a6raywa1cher.mucservingboxspring.rest.req.ChangePasswordRequest;
 import com.a6raywa1cher.mucservingboxspring.rest.req.CreateUserRequest;
+import com.a6raywa1cher.mucservingboxspring.service.FSEntityService;
 import com.a6raywa1cher.mucservingboxspring.service.UserService;
 import com.a6raywa1cher.mucservingboxspring.utils.LocalHtmlUtils;
 import com.a6raywa1cher.mucservingboxspring.utils.Views;
@@ -22,9 +23,11 @@ import java.util.Optional;
 @RequestMapping("/user")
 public class UserController {
 	private final UserService userService;
+	private final FSEntityService fsEntityService;
 
-	public UserController(UserService userService) {
+	public UserController(UserService userService, FSEntityService fsEntityService) {
 		this.userService = userService;
+		this.fsEntityService = fsEntityService;
 	}
 
 	@PostMapping("/temp")
@@ -37,8 +40,10 @@ public class UserController {
 //	@PreAuthorize("#mvcAccessChecker.haveAccessToCreateUser(#request.getUserRole(), #authentication)")
 	@JsonView(Views.Internal.class)
 	public ResponseEntity<User> createUser(@RequestBody @Valid CreateUserRequest request, HttpServletRequest servletRequest) {
-		return ResponseEntity.ok(userService.create(request.getUserRole(), request.getUsername(),
-			LocalHtmlUtils.htmlEscape(request.getName()), request.getPassword(), servletRequest.getRemoteAddr()));
+		User user = userService.create(request.getUserRole(), request.getUsername(),
+			LocalHtmlUtils.htmlEscape(request.getName(), 255), request.getPassword(), servletRequest.getRemoteAddr());
+		User out = userService.editRootFolder(user, fsEntityService.createNewHome(user));
+		return ResponseEntity.ok(out);
 	}
 
 	@PutMapping("/{uid:[0-9]+}/edit_name")
@@ -49,10 +54,10 @@ public class UserController {
 		}
 		User user = optional.get();
 		return ResponseEntity.ok(userService.editUser(user, user.getUserRole(), user.getUsername(),
-			LocalHtmlUtils.htmlEscape(request.getName())));
+			LocalHtmlUtils.htmlEscape(request.getName(), 255)));
 	}
 
-	@PostMapping("/{uid:[0-9]+}/edit_password")
+	@PutMapping("/{uid:[0-9]+}/edit_password")
 	public ResponseEntity<User> editPassword(@RequestBody @Valid ChangePasswordRequest request, @PathVariable long uid) {
 		Optional<User> optional = userService.getById(uid);
 		if (optional.isEmpty()) {
@@ -72,6 +77,9 @@ public class UserController {
 			return ResponseEntity.notFound().build();
 		}
 		User user = optional.get();
+		if (user.getRootFolder() != null) {
+			fsEntityService.deleteEntity(user.getRootFolder());
+		}
 		userService.deleteUser(user);
 		return ResponseEntity.ok().build();
 	}

@@ -7,6 +7,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class MvcAccessChecker {
 	public boolean haveAccessToCreateUser(UserRole requestedRole, Authentication authentication) {
-
+		return false;
 	}
 }
