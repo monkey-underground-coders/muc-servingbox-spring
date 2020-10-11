@@ -2,6 +2,9 @@ package com.a6raywa1cher.mucservingboxspring.model.file;
 
 import com.a6raywa1cher.mucservingboxspring.model.User;
 import com.a6raywa1cher.mucservingboxspring.model.UserRole;
+import com.a6raywa1cher.mucservingboxspring.utils.Views;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonView;
 import lombok.Data;
 
 import javax.persistence.*;
@@ -18,36 +21,32 @@ import java.util.stream.Stream;
 public class FSEntityPermission {
 	@Id
 	@GeneratedValue
+	@JsonView(Views.Public.class)
 	private Long id;
 
 	@ManyToMany
-	@JoinTable(
-		indexes = {
-			@Index(columnList = "entities_path"),
-		}
-	)
+	@JoinTable(indexes = @Index(columnList = "entities_path"))
+	@JsonView(Views.Public.class)
 	private List<FSEntity> entities = new ArrayList<>();
 
 	@ManyToMany(fetch = FetchType.EAGER)
-//	@JoinTable(
-//		joinColumns = @JoinColumn(name = "fsentity_permission_id"),
-//		inverseJoinColumns = @JoinColumn(name = "affected_users_id"),
-//		indexes = {
-//			@Index(columnList = "fsentity_permission_id, affected_users_id"),
-//		}
-//	)
+	@JsonView(Views.Public.class)
 	private List<User> affectedUsers = new ArrayList<>();
 
 	@ElementCollection
+	@JsonView(Views.Public.class)
 	private List<UserRole> affectedUserRoles = new ArrayList<>();
 
 	@Column(nullable = false)
+	@JsonView(Views.Public.class)
 	private Boolean applicationDefined;
 
 	@Column(nullable = false)
+	@JsonView(Views.Public.class)
 	private Integer mask;
 
 	@Transient
+	@JsonInclude
 	public List<ActionType> getActionTypes() {
 		int mask = this.getMask();
 		return Stream.of(ActionType.values())

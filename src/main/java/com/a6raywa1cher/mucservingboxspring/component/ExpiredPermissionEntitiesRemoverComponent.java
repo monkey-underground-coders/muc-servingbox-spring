@@ -22,7 +22,7 @@ public class ExpiredPermissionEntitiesRemoverComponent {
 		this.permissionService = permissionService;
 	}
 
-	@Scheduled(fixedRate = 5000L)
+	@Scheduled(fixedRateString = "${app.expired-remover-rate}")
 	public void removeExpiredPermissions() {
 		for (LiveLesson lesson : liveLessonRepository.findExpired(ZonedDateTime.now())) {
 			try {

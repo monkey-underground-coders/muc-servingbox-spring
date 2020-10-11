@@ -11,15 +11,16 @@ import com.a6raywa1cher.mucservingboxspring.service.UserService;
 import com.a6raywa1cher.mucservingboxspring.utils.LocalHtmlUtils;
 import com.a6raywa1cher.mucservingboxspring.utils.Views;
 import com.fasterxml.jackson.annotation.JsonView;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.util.Optional;
 
-@Controller
+@RestController
 @RequestMapping("/user")
 public class UserController {
 	private final UserService userService;
@@ -39,6 +40,7 @@ public class UserController {
 	@PostMapping("/create")
 //	@PreAuthorize("#mvcAccessChecker.haveAccessToCreateUser(#request.getUserRole(), #authentication)")
 	@JsonView(Views.Internal.class)
+	@Operation(security = @SecurityRequirement(name = "jwt"))
 	public ResponseEntity<User> createUser(@RequestBody @Valid CreateUserRequest request, HttpServletRequest servletRequest) {
 		User user = userService.create(request.getUserRole(), request.getUsername(),
 			LocalHtmlUtils.htmlEscape(request.getName(), 255), request.getPassword(), servletRequest.getRemoteAddr());
@@ -46,7 +48,21 @@ public class UserController {
 		return ResponseEntity.ok(out);
 	}
 
+	@GetMapping("/{uid:[0-9]+}")
+	@JsonView(Views.Public.class)
+	public ResponseEntity<User> getById(@PathVariable long uid) {
+		return userService.getById(uid).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+	}
+
+	@GetMapping("/{uid:[0-9]+}/internal")
+	@JsonView(Views.Internal.class)
+	public ResponseEntity<User> getByIdInternal(@PathVariable long uid) {
+		return userService.getById(uid).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+	}
+
 	@PutMapping("/{uid:[0-9]+}/edit_name")
+	@JsonView(Views.Internal.class)
+	@Operation(security = @SecurityRequirement(name = "jwt"))
 	public ResponseEntity<User> editName(@RequestBody @Valid ChangeNameOfUserRequest request, @PathVariable long uid) {
 		Optional<User> optional = userService.getById(uid);
 		if (optional.isEmpty()) {
@@ -58,6 +74,8 @@ public class UserController {
 	}
 
 	@PutMapping("/{uid:[0-9]+}/edit_password")
+	@JsonView(Views.Internal.class)
+	@Operation(security = @SecurityRequirement(name = "jwt"))
 	public ResponseEntity<User> editPassword(@RequestBody @Valid ChangePasswordRequest request, @PathVariable long uid) {
 		Optional<User> optional = userService.getById(uid);
 		if (optional.isEmpty()) {
@@ -71,6 +89,8 @@ public class UserController {
 	}
 
 	@DeleteMapping("/{uid:[0-9]+}")
+	@JsonView(Views.Internal.class)
+	@Operation(security = @SecurityRequirement(name = "jwt"))
 	public ResponseEntity<Void> delete(@PathVariable long uid) {
 		Optional<User> optional = userService.getById(uid);
 		if (optional.isEmpty()) {

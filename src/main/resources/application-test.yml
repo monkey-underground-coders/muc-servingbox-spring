@@ -5,6 +5,7 @@ app:
   upload-dir: "./test-container/"
   temporary-user-access-duration: P1D
   temporary-user-name: "Временный ученик #%s"
+  expired-remover-rate: 5000
   first-admin:
     username: admin
     name: admin

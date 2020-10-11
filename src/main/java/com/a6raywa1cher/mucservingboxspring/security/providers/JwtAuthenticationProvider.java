@@ -59,8 +59,10 @@ public class JwtAuthenticationProvider implements AuthenticationProvider {
 		}
 		UserRole userRole = user.getUserRole();
 		Set<GrantedAuthority> authoritySet = userRole.access.stream()
-			.map(role -> new SimpleGrantedAuthority("ROLE_" + role.name()))
-			.collect(Collectors.toUnmodifiableSet());
+			.map(role -> new SimpleGrantedAuthority("ACCESS_" + role.name()))
+			.collect(Collectors.toSet());
+		authoritySet.add(new SimpleGrantedAuthority("ROLE_USER"));
+		authoritySet.add(new SimpleGrantedAuthority("ROLE_" + userRole.name()));
 		return new CustomAuthentication(authoritySet, jwtToken);
 	}
 

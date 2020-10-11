@@ -33,6 +33,6 @@ public class BlockedRefreshTokensServiceImpl implements BlockedRefreshTokensServ
 
 	@Override
 	public boolean isValid(Long uuid) {
-		return cache.getIfPresent(uuid) != null;
+		return cache.getIfPresent(uuid) == null;
 	}
 }

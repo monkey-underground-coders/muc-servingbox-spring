@@ -118,7 +118,7 @@ public class FSEntityServiceImpl implements FSEntityService {
 
 	@Override
 	public Optional<FSEntity> getById(Long id) {
-		return repository.findById(id);
+		return repository.getById(id);
 	}
 
 	@Override

@@ -8,9 +8,14 @@ import com.a6raywa1cher.mucservingboxspring.rest.exc.FolderOperationOnFileExcept
 import com.a6raywa1cher.mucservingboxspring.rest.req.CreateFolderRequest;
 import com.a6raywa1cher.mucservingboxspring.rest.req.MoveEntityRequest;
 import com.a6raywa1cher.mucservingboxspring.service.FSEntityService;
+import com.a6raywa1cher.mucservingboxspring.utils.Views;
+import com.fasterxml.jackson.annotation.JsonView;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -18,7 +23,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.Pattern;
 import java.util.Optional;
 
-@Controller
+@RestController
 @RequestMapping("/fs")
 public class FSEntityController {
 	public static final String FS_NAME_REGEXP = "[^\\\\/:*?\"<>|]{3,255}";
@@ -28,12 +33,14 @@ public class FSEntityController {
 		this.entityService = entityService;
 	}
 
-	@PostMapping("/file")
+	@PostMapping(path = "/file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	@JsonView(Views.Public.class)
+	@Operation(security = @SecurityRequirement(name = "jwt"))
 	public ResponseEntity<FSEntity> uploadFile(
 		@RequestParam("file") MultipartFile multipartFile,
 		@RequestParam("parent") long parentId,
 		@RequestParam("name") @Pattern(regexp = FS_NAME_REGEXP) @Valid String fileName,
-		User creator) {
+		@Parameter(hidden = true) User creator) {
 		Optional<FSEntity> optionalParent = entityService.getById(parentId);
 		if (optionalParent.isEmpty()) {
 			return ResponseEntity.notFound().build();
@@ -49,7 +56,9 @@ public class FSEntityController {
 	}
 
 	@PostMapping("/folder")
-	public ResponseEntity<FSEntity> createFolder(@RequestBody @Valid CreateFolderRequest request, User creator) {
+	@JsonView(Views.Public.class)
+	@Operation(security = @SecurityRequirement(name = "jwt"))
+	public ResponseEntity<FSEntity> createFolder(@RequestBody @Valid CreateFolderRequest request, @Parameter(hidden = true) User creator) {
 		Optional<FSEntity> optionalParent = entityService.getById(request.getParentId());
 		if (optionalParent.isEmpty()) {
 			return ResponseEntity.notFound().build();
@@ -64,7 +73,9 @@ public class FSEntityController {
 		return ResponseEntity.ok(entityService.createNewFolder(parent, request.getFolderName(), false, creator));
 	}
 
-	@PutMapping("/{fid:[0-9]+}/content")
+	@PutMapping(path = "/{fid:[0-9]+}/content", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	@JsonView(Views.Public.class)
+	@Operation(security = @SecurityRequirement(name = "jwt"))
 	public ResponseEntity<Void> updateContent(@PathVariable long fid, @RequestParam("file") MultipartFile multipartFile) {
 		Optional<FSEntity> optionalFSEntity = entityService.getById(fid);
 		if (optionalFSEntity.isEmpty()) {
@@ -78,7 +89,9 @@ public class FSEntityController {
 		return ResponseEntity.ok().build();
 	}
 
-	@GetMapping("/{fid:[0-9]+}/content")
+	@GetMapping(value = "/{fid:[0-9]+}/content", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+	@JsonView(Views.Public.class)
+	@Operation(security = @SecurityRequirement(name = "jwt"))
 	public ResponseEntity<Resource> getContent(@PathVariable long fid) {
 		Optional<FSEntity> optionalFSEntity = entityService.getById(fid);
 		if (optionalFSEntity.isEmpty()) {
@@ -88,11 +101,15 @@ public class FSEntityController {
 		if (file.isFolder()) {
 			throw new FileOperationOnFolderException();
 		}
-		return ResponseEntity.ok(entityService.getFileContent(file));
+		return ResponseEntity.ok()
+			.header("Content-Disposition", "attachment; filename=\"" + file.getName() + '"')
+			.body(entityService.getFileContent(file));
 	}
 
 	@PostMapping("/move")
-	public ResponseEntity<FSEntity> moveEntity(@RequestBody @Valid MoveEntityRequest request, User user) {
+	@JsonView(Views.Public.class)
+	@Operation(security = @SecurityRequirement(name = "jwt"))
+	public ResponseEntity<FSEntity> moveEntity(@RequestBody @Valid MoveEntityRequest request, @Parameter(hidden = true) User user) {
 		Optional<FSEntity> optionalObject = entityService.getById(request.getObjectId());
 		Optional<FSEntity> optionalTargetParent = entityService.getById(request.getTargetParentId());
 		if (optionalObject.isEmpty() || optionalTargetParent.isEmpty()) {
@@ -110,7 +127,9 @@ public class FSEntityController {
 	}
 
 	@PostMapping("/copy")
-	public ResponseEntity<FSEntity> copyEntity(@RequestBody @Valid MoveEntityRequest request, User user) {
+	@JsonView(Views.Public.class)
+	@Operation(security = @SecurityRequirement(name = "jwt"))
+	public ResponseEntity<FSEntity> copyEntity(@RequestBody @Valid MoveEntityRequest request, @Parameter(hidden = true) User user) {
 		Optional<FSEntity> optionalObject = entityService.getById(request.getObjectId());
 		Optional<FSEntity> optionalTargetParent = entityService.getById(request.getTargetParentId());
 		if (optionalObject.isEmpty() || optionalTargetParent.isEmpty()) {
@@ -128,11 +147,15 @@ public class FSEntityController {
 	}
 
 	@GetMapping("/{fid:[0-9]+}")
+	@JsonView(Views.Public.class)
+	@Operation(security = @SecurityRequirement(name = "jwt"))
 	public ResponseEntity<FSEntity> getById(@PathVariable long fid) {
 		return entityService.getById(fid).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
 	}
 
 	@DeleteMapping("/{fid:[0-9]+}")
+	@JsonView(Views.Public.class)
+	@Operation(security = @SecurityRequirement(name = "jwt"))
 	public ResponseEntity<Void> delete(@PathVariable long fid) {
 		Optional<FSEntity> optionalFSEntity = entityService.getById(fid);
 		if (optionalFSEntity.isEmpty()) {

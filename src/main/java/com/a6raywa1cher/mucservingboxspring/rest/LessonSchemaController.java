@@ -7,10 +7,14 @@ import com.a6raywa1cher.mucservingboxspring.rest.req.EditLessonSchemaRequest;
 import com.a6raywa1cher.mucservingboxspring.service.LessonSchemaService;
 import com.a6raywa1cher.mucservingboxspring.service.UserService;
 import com.a6raywa1cher.mucservingboxspring.utils.LocalHtmlUtils;
+import com.a6raywa1cher.mucservingboxspring.utils.Views;
+import com.fasterxml.jackson.annotation.JsonView;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -18,7 +22,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-@Controller
+@RestController
 @RequestMapping("/schema")
 public class LessonSchemaController {
 	private final LessonSchemaService schemaService;
@@ -30,7 +34,9 @@ public class LessonSchemaController {
 	}
 
 	@PostMapping("/create")
-	public ResponseEntity<LessonSchema> createLessonSchema(@RequestBody @Valid CreateLessonSchemaRequest request, User user) {
+	@JsonView(Views.Public.class)
+	@Operation(security = @SecurityRequirement(name = "jwt"))
+	public ResponseEntity<LessonSchema> createLessonSchema(@RequestBody @Valid CreateLessonSchemaRequest request, @Parameter(hidden = true) User user) {
 		return ResponseEntity.ok(schemaService.create(
 			LocalHtmlUtils.htmlEscape(request.getTitle(), 255),
 			LocalHtmlUtils.htmlEscape(request.getDescription()),
@@ -39,15 +45,15 @@ public class LessonSchemaController {
 	}
 
 	@GetMapping("/{lid:[0-9]+}")
-	public ResponseEntity<LessonSchema> getLessonSchema(@PathVariable long lid) {
-		Optional<LessonSchema> byId = schemaService.getById(lid);
-		if (byId.isEmpty()) {
-			return ResponseEntity.notFound().build();
-		}
-		return ResponseEntity.ok(byId.get());
+	@JsonView(Views.Public.class)
+	@Operation(security = @SecurityRequirement(name = "jwt"))
+	public ResponseEntity<LessonSchema> getById(@PathVariable long lid) {
+		return schemaService.getById(lid).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
 	}
 
 	@GetMapping("/search")
+	@JsonView(Views.Public.class)
+	@Operation(security = @SecurityRequirement(name = "jwt"))
 	public ResponseEntity<Page<LessonSchema>> getByTitle(@RequestParam("word") List<String> searchWords,
 														 @RequestParam(value = "uid", required = false) Long uid,
 														 Pageable pageable) {
@@ -63,6 +69,8 @@ public class LessonSchemaController {
 	}
 
 	@PutMapping("/{lid:[0-9]+}")
+	@JsonView(Views.Public.class)
+	@Operation(security = @SecurityRequirement(name = "jwt"))
 	public ResponseEntity<LessonSchema> editLessonSchema(@RequestBody @Valid EditLessonSchemaRequest request, @PathVariable long lid) {
 		Optional<LessonSchema> byId = schemaService.getById(lid);
 		if (byId.isEmpty()) {
@@ -75,6 +83,8 @@ public class LessonSchemaController {
 	}
 
 	@DeleteMapping("/{lid:[0-9]+}")
+	@JsonView(Views.Public.class)
+	@Operation(security = @SecurityRequirement(name = "jwt"))
 	public ResponseEntity<Void> delete(@PathVariable long lid) {
 		Optional<LessonSchema> byId = schemaService.getById(lid);
 		if (byId.isEmpty()) {

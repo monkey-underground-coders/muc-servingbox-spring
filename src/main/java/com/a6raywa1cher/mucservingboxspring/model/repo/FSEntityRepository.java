@@ -24,4 +24,6 @@ public interface FSEntityRepository extends CrudRepository<FSEntity, Long> {
 
 	@Query("delete from FSEntity e where e.path like concat(:path, '%')")
 	void deleteAllTree(@Param("path") String path);
+
+	Optional<FSEntity> getById(Long id);
 }
