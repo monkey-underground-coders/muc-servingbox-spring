@@ -19,12 +19,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.transaction.Transactional;
 import javax.validation.Valid;
 import javax.validation.constraints.Pattern;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/fs")
+@Transactional
 public class FSEntityController {
 	public static final String FS_NAME_REGEXP = "[^\\\\/:*?\"<>|]{3,255}";
 	private final FSEntityService entityService;
@@ -167,7 +169,7 @@ public class FSEntityController {
 
 
 	private boolean isNonUniqueInThisParent(String fileName, FSEntity parent) {
-		return entityService.getByPath(parent.getPath() + '/' + fileName).isPresent() ||
-			entityService.getByPath(parent.getPath() + '/' + fileName + '/').isPresent();
+		return entityService.getByPath(parent.getPath() + fileName).isPresent() ||
+			entityService.getByPath(parent.getPath() + fileName + '/').isPresent();
 	}
 }

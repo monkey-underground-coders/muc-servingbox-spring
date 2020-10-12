@@ -25,7 +25,7 @@ public class FSEntityPermission {
 	private Long id;
 
 	@ManyToMany
-	@JoinTable(indexes = @Index(columnList = "entities_path"))
+//	@JoinTable(indexes = @Index(columnList = "entities_path"))
 	@JsonView(Views.Public.class)
 	private List<FSEntity> entities = new ArrayList<>();
 

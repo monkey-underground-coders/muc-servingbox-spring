@@ -123,7 +123,7 @@ public class FSEntityServiceImpl implements FSEntityService {
 
 	@Override
 	public Optional<FSEntity> getByPath(String path) {
-		return repository.findByPath(path);
+		return repository.findByPath(path).findAny();
 	}
 
 	@Override

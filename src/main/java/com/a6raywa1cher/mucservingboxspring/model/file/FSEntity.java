@@ -17,7 +17,6 @@ import java.util.stream.IntStream;
 @Entity
 @Data
 @ToString(exclude = "createdBy")
-@IdClass(FSEntityId.class)
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIdentityInfo(
@@ -29,8 +28,7 @@ public class FSEntity {
 	@JsonView(Views.Public.class)
 	private Long id;
 
-	@Id
-	@Column(length = 512)
+	@Column(length = 512, unique = true)
 	@JsonView(Views.Public.class)
 	private String path;
 

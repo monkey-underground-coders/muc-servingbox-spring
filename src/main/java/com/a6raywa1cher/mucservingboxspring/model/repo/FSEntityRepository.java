@@ -8,10 +8,11 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 @Repository
 public interface FSEntityRepository extends CrudRepository<FSEntity, Long> {
-	Optional<FSEntity> findByPath(String path);
+	Stream<FSEntity> findByPath(String path);
 
 	@Query("from FSEntity e where e.path like concat(:path, '%')")
 	List<FSEntity> getTreeByPath(@Param("path") String path);
