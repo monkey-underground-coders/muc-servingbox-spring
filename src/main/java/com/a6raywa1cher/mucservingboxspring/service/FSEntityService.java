@@ -7,7 +7,9 @@ import com.a6raywa1cher.mucservingboxspring.model.lesson.LiveLesson;
 import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Collection;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 public interface FSEntityService {
 	FSEntity createNewHome(User creator);
@@ -23,6 +25,8 @@ public interface FSEntityService {
 	Resource getFileContent(FSEntity file);
 
 	Optional<FSEntity> getById(Long id);
+
+	Stream<FSEntity> getById(Collection<Long> ids);
 
 	Optional<FSEntity> getByPath(String path);
 

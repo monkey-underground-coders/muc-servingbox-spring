@@ -5,7 +5,9 @@ import com.a6raywa1cher.mucservingboxspring.model.UserRole;
 import com.a6raywa1cher.mucservingboxspring.model.file.FSEntity;
 
 import java.time.ZonedDateTime;
+import java.util.Collection;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 public interface UserService {
 	User create(String registrationIp);
@@ -13,6 +15,8 @@ public interface UserService {
 	User create(UserRole userRole, String username, String name, String password, String registrationIp);
 
 	Optional<User> getById(Long id);
+
+	Stream<User> getById(Collection<Long> ids);
 
 	Optional<User> getByUsername(String username);
 

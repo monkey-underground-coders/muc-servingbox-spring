@@ -22,6 +22,8 @@ import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 @Service
 public class FSEntityServiceImpl implements FSEntityService {
@@ -119,6 +121,11 @@ public class FSEntityServiceImpl implements FSEntityService {
 	@Override
 	public Optional<FSEntity> getById(Long id) {
 		return repository.getById(id);
+	}
+
+	@Override
+	public Stream<FSEntity> getById(Collection<Long> ids) {
+		return StreamSupport.stream(repository.findAllById(ids).spliterator(), false);
 	}
 
 	@Override

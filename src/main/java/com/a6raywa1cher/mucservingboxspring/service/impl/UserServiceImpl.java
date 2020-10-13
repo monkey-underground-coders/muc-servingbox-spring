@@ -15,8 +15,11 @@ import org.springframework.stereotype.Service;
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -73,6 +76,11 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public Optional<User> getById(Long id) {
 		return repository.findById(id);
+	}
+
+	@Override
+	public Stream<User> getById(Collection<Long> ids) {
+		return StreamSupport.stream(repository.findAllById(ids).spliterator(), false);
 	}
 
 	@Override
