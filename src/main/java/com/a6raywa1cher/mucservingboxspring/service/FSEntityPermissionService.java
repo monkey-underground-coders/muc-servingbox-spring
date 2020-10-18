@@ -12,7 +12,7 @@ import java.util.Optional;
 public interface FSEntityPermissionService {
 	Optional<FSEntityPermission> getById(Long id);
 
-	List<FSEntityPermission> getChildrenByFSEntity(FSEntity entity);
+	List<FSEntityPermission> getByFSEntity(FSEntity fsEntity);
 
 	FSEntityPermission create(List<FSEntity> entityList, List<User> users, List<UserRole> userRoles,
 							  boolean applicationDefined, List<ActionType> actionTypes);

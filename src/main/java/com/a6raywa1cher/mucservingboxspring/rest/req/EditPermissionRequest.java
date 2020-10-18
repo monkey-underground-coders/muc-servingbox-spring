@@ -9,7 +9,7 @@ import javax.validation.constraints.Size;
 import java.util.List;
 
 @Data
-public class CreatePermissionRequest {
+public class EditPermissionRequest {
 	@NotNull
 	@Size(min = 1)
 	private List<Long> entityIds;

@@ -56,6 +56,7 @@ public class UserController {
 
 	@GetMapping("/{uid:[0-9]+}/internal")
 	@JsonView(Views.Internal.class)
+	@Operation(security = @SecurityRequirement(name = "jwt"))
 	public ResponseEntity<User> getByIdInternal(@PathVariable long uid) {
 		return userService.getById(uid).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
 	}

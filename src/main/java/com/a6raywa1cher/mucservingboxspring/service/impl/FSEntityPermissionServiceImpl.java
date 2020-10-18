@@ -46,8 +46,8 @@ public class FSEntityPermissionServiceImpl implements FSEntityPermissionService 
 	}
 
 	@Override
-	public List<FSEntityPermission> getChildrenByFSEntity(FSEntity entity) {
-		return repository.getAllByPath(entity.getPath());
+	public List<FSEntityPermission> getByFSEntity(FSEntity fsEntity) {
+		return repository.getAllByEntity(fsEntity);
 	}
 
 	@Override
@@ -79,7 +79,8 @@ public class FSEntityPermissionServiceImpl implements FSEntityPermissionService 
 //		if (!repository.checkAccess(getUpperLevels(parent.getPath()), user.getId(), user.getUserRole(), actionType.allMasks)) {
 //			throw new InsufficientAccessToChildrenException();
 //		}
-		return entityRepository.getTreeByPath(parent.getPath());
+		List<FSEntity> treeByPath = entityRepository.getTreeByPath(parent.getPath());
+		return treeByPath.stream().filter(e -> !parent.getId().equals(e.getId())).collect(Collectors.toList());
 	}
 
 	@Override

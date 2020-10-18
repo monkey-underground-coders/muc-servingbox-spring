@@ -36,7 +36,8 @@ public class LessonSchemaController {
 	@PostMapping("/create")
 	@JsonView(Views.Public.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
-	public ResponseEntity<LessonSchema> createLessonSchema(@RequestBody @Valid CreateLessonSchemaRequest request, @Parameter(hidden = true) User user) {
+	public ResponseEntity<LessonSchema> createLessonSchema(@RequestBody @Valid CreateLessonSchemaRequest request,
+														   @Parameter(hidden = true) User user) {
 		return ResponseEntity.ok(schemaService.create(
 			LocalHtmlUtils.htmlEscape(request.getTitle(), 255),
 			LocalHtmlUtils.htmlEscape(request.getDescription()),

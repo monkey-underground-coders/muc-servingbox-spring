@@ -1,6 +1,7 @@
 package com.a6raywa1cher.mucservingboxspring.model.repo;
 
 import com.a6raywa1cher.mucservingboxspring.model.UserRole;
+import com.a6raywa1cher.mucservingboxspring.model.file.FSEntity;
 import com.a6raywa1cher.mucservingboxspring.model.file.FSEntityPermission;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
@@ -19,4 +20,7 @@ public interface FSEntityPermissionRepository extends CrudRepository<FSEntityPer
 
 	@Query("select p from FSEntityPermission p, FSEntity e where e.path like concat(:path, '%')")
 	List<FSEntityPermission> getAllByPath(@Param("path") String path);
+
+	@Query("from FSEntityPermission p, FSEntity e where e = :ent")
+	List<FSEntityPermission> getAllByEntity(@Param("ent") FSEntity fsEntity);
 }

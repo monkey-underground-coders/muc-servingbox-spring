@@ -62,10 +62,14 @@ public class FSEntity {
 	@JsonView(Views.Public.class)
 	private long byteSize;
 
+	@Transient
+	@JsonIgnore
 	public boolean isFile() {
 		return isFolder != null && !isFolder;
 	}
 
+	@Transient
+	@JsonIgnore
 	public boolean isFolder() {
 		return isFolder != null && isFolder;
 	}
