@@ -6,7 +6,7 @@ import javax.validation.constraints.*;
 import java.time.ZonedDateTime;
 
 @Data
-public class ScheduleLiveLessonRequest {
+public class StartLiveLessonRequest {
 	@NotNull
 	@Positive
 	private Long schemaId;
@@ -14,10 +14,6 @@ public class ScheduleLiveLessonRequest {
 	@NotBlank
 	@Size(max = 255)
 	private String name;
-
-	@NotNull
-	@Future
-	private ZonedDateTime start;
 
 	@NotNull
 	@Future

@@ -85,7 +85,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 			.antMatchers("/auth/get_access").permitAll()
 			.antMatchers("/logout").authenticated()
 			.antMatchers("/favicon.ico").permitAll()
-			.antMatchers("/fs/folder", "/fs/file").access("@mvcAccessChecker.checkChildrenPathAccess(#request?.getParentId(), T(com.a6raywa1cher.mucservingboxspring.model.file.ActionType).WRITE, #authentication)")
+			.antMatchers("/fs/folder", "/fs/file").access(
+			"@mvcAccessChecker.checkChildrenPathAccess(#request?.getParentId(), T(com.a6raywa1cher.mucservingboxspring.model.file.ActionType).WRITE, #authentication)"
+		)
 			.anyRequest().hasRole("USER")
 			.and()
 			.cors()

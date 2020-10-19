@@ -69,7 +69,7 @@ public class FSEntityServiceImpl implements FSEntityService {
 	@Override
 	public FSEntity createNewLessonRoot(LessonSchema lessonSchema) {
 		User creator = lessonSchema.getCreator();
-		return createNode('/' + creator.getId() + "/lroot/" + lessonSchema.getId() + '/',
+		return createNode("/" + creator.getId() + "/lroot/" + lessonSchema.getId() + "/root/",
 			true,
 			null,
 			false,
@@ -80,7 +80,7 @@ public class FSEntityServiceImpl implements FSEntityService {
 	public FSEntity createNewLiveLessonRoot(LiveLesson liveLesson) {
 		LessonSchema lessonSchema = liveLesson.getSchema();
 		User creator = lessonSchema.getCreator();
-		return createNode('/' + creator.getId() + "/lroots/" +
+		return createNode("/" + creator.getId() + "/lroot/" +
 				lessonSchema.getId() + '/' + liveLesson.getId() + '/',
 			true,
 			null,

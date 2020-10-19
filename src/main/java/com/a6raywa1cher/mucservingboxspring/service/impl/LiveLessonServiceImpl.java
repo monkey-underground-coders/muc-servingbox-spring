@@ -21,6 +21,7 @@ import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class LiveLessonServiceImpl implements LiveLessonService {
@@ -88,6 +89,11 @@ public class LiveLessonServiceImpl implements LiveLessonService {
 	}
 
 	@Override
+	public Optional<LiveLesson> getById(Long id) {
+		return repository.findById(id);
+	}
+
+	@Override
 	public LiveLesson edit(LiveLesson lesson, String name, ZonedDateTime start, ZonedDateTime end) {
 		lesson.setName(name);
 		lesson.setStartAt(start);
@@ -96,14 +102,13 @@ public class LiveLessonServiceImpl implements LiveLessonService {
 	}
 
 	@Override
-	public FSEntity connect(LiveLesson lesson, User user) {
+	public LiveLesson connect(LiveLesson lesson, User user) {
 		FSEntity folder = fsEntityService.createNewFolder(lesson.getRoot(), Long.toString(user.getId()),
 			false, user);
 		FSEntityPermission permission = permissionService.create(List.of(folder), List.of(user), new ArrayList<>(),
 			true, List.of(ActionType.READ, ActionType.WRITE));
 		lesson.getManagedStudentPermissions().add(permission);
-		repository.save(lesson);
-		return folder;
+		return repository.save(lesson);
 	}
 
 	@Override

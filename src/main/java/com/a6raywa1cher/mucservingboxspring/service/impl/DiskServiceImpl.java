@@ -137,11 +137,11 @@ public class DiskServiceImpl implements DiskService {
 	@Override
 	public Map<Path, Pair<Path, Long>> copyFiles(List<Path> path) {
 		Map<Path, Pair<Path, Long>> out = path.stream()
-			.collect(Collectors.toMap(p -> p, p -> Pair.of(newPath(), p.toFile().length())));
+			.collect(Collectors.toMap(p -> p, p -> Pair.of(root.relativize(newPath()), root.resolve(p).toFile().length())));
 		pool.invokeAll(out.entrySet().stream()
 			.map(e -> (Callable<Void>) () -> {
-				Path oldPath = e.getKey();
-				Path newPath = e.getValue().getFirst();
+				Path oldPath = root.resolve(e.getKey());
+				Path newPath = root.resolve(e.getValue().getFirst());
 				long estimatedSize = e.getValue().getSecond();
 				try {
 					long transferred = transferToPath(new BufferedInputStream(new FileInputStream(oldPath.toFile())), newPath);
