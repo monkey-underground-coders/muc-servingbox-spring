@@ -26,7 +26,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/fs")
-@Transactional
+@Transactional(rollbackOn = Exception.class)
 public class FSEntityController {
 	public static final String FS_NAME_REGEXP = "[^\\\\/:*?\"<>|]{3,255}";
 	private final FSEntityService entityService;
@@ -75,6 +75,13 @@ public class FSEntityController {
 		return ResponseEntity.ok(entityService.createNewFolder(parent, request.getFolderName(), false, creator));
 	}
 
+	@GetMapping("/path")
+	@JsonView(Views.Public.class)
+	@Operation(security = @SecurityRequirement(name = "jwt"))
+	public ResponseEntity<FSEntity> resolvePath(@RequestParam String path) {
+		return entityService.getByPath(path).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+	}
+
 	@PutMapping(path = "/{fid:[0-9]+}/content", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	@JsonView(Views.Public.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
@@ -94,7 +101,7 @@ public class FSEntityController {
 	@GetMapping(value = "/{fid:[0-9]+}/content", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
 	@JsonView(Views.Public.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
-	public ResponseEntity<Resource> getContent(@PathVariable long fid) {
+	public ResponseEntity<Resource> getContent(@PathVariable long fid, @RequestParam(value = "disposition", defaultValue = "attachment", required = false) String disposition) {
 		Optional<FSEntity> optionalFSEntity = entityService.getById(fid);
 		if (optionalFSEntity.isEmpty()) {
 			return ResponseEntity.notFound().build();
@@ -104,7 +111,7 @@ public class FSEntityController {
 			throw new FileOperationOnFolderException();
 		}
 		return ResponseEntity.ok()
-			.header("Content-Disposition", "attachment; filename=\"" + file.getName() + '"')
+			.header("Content-Disposition", disposition + "; filename=\"" + file.getName() + '"')
 			.body(entityService.getFileContent(file));
 	}
 

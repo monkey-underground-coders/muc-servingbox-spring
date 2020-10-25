@@ -63,12 +63,20 @@ public class LessonSchemaServiceImpl implements LessonSchemaService {
 
 	@Override
 	public Page<LessonSchema> getPage(List<String> searchWords, Pageable pageable) {
-		return repository.findByTitle(FullTextSearchSQLFunction.searchWordsToQueryParam(searchWords), pageable);
+		if (searchWords.size() > 0) {
+			return repository.findByTitle(FullTextSearchSQLFunction.searchWordsToQueryParam(searchWords), pageable);
+		} else {
+			return repository.findAll(pageable);
+		}
 	}
 
 	@Override
 	public Page<LessonSchema> getPage(List<String> searchWords, User creator, Pageable pageable) {
-		return repository.findByTitleAndUser(FullTextSearchSQLFunction.searchWordsToQueryParam(searchWords), creator, pageable);
+		if (searchWords.size() > 0) {
+			return repository.findByTitleAndUser(FullTextSearchSQLFunction.searchWordsToQueryParam(searchWords), creator, pageable);
+		} else {
+			return repository.findByCreator(creator, pageable);
+		}
 	}
 
 	@Override

@@ -6,6 +6,8 @@ import com.a6raywa1cher.mucservingboxspring.rest.exc.UnacceptableRequestTowardsT
 import com.a6raywa1cher.mucservingboxspring.rest.req.ChangeNameOfUserRequest;
 import com.a6raywa1cher.mucservingboxspring.rest.req.ChangePasswordRequest;
 import com.a6raywa1cher.mucservingboxspring.rest.req.CreateUserRequest;
+import com.a6raywa1cher.mucservingboxspring.rest.res.TemporaryUserCreateResponse;
+import com.a6raywa1cher.mucservingboxspring.security.jwt.service.JwtRefreshPairService;
 import com.a6raywa1cher.mucservingboxspring.service.FSEntityService;
 import com.a6raywa1cher.mucservingboxspring.service.UserService;
 import com.a6raywa1cher.mucservingboxspring.utils.LocalHtmlUtils;
@@ -17,24 +19,30 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.transaction.Transactional;
 import javax.validation.Valid;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/user")
+@Transactional(rollbackOn = Exception.class)
 public class UserController {
 	private final UserService userService;
 	private final FSEntityService fsEntityService;
+	private final JwtRefreshPairService jwtRefreshPairService;
 
-	public UserController(UserService userService, FSEntityService fsEntityService) {
+	public UserController(UserService userService, FSEntityService fsEntityService,
+						  JwtRefreshPairService jwtRefreshPairService) {
 		this.userService = userService;
 		this.fsEntityService = fsEntityService;
+		this.jwtRefreshPairService = jwtRefreshPairService;
 	}
 
 	@PostMapping("/temp")
 	@JsonView(Views.Internal.class)
-	public ResponseEntity<User> createTemporaryUser(HttpServletRequest request) {
-		return ResponseEntity.ok(userService.create(request.getRemoteAddr()));
+	public ResponseEntity<TemporaryUserCreateResponse> createTemporaryUser(HttpServletRequest request) {
+		User user = userService.create(request.getRemoteAddr());
+		return ResponseEntity.ok(new TemporaryUserCreateResponse(user, jwtRefreshPairService.issue(user)));
 	}
 
 	@PostMapping("/create")

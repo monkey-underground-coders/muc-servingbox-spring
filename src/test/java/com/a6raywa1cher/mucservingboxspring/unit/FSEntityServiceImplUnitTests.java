@@ -140,8 +140,9 @@ public class FSEntityServiceImplUnitTests {
 		assertEquals(Path.of("/12345"), Path.of(toCheck2.getDiskObjectPath()));
 		assertEquals(1L, toCheck2.getByteSize());
 
-		verify(fsEntityRepository).deleteAllTree(any());
-		verify(fsEntityRepository).deleteAllTree("/f1/");
+//		verify(fsEntityRepository).deleteAllTree(any());
+//		verify(fsEntityRepository).deleteAllTree("/f1/");
+		verify(fsEntityRepository).deleteAll(List.of(folder, file));
 		verify(fsEntityPermissionService).deletePermissionsTreeFor(any());
 		verify(fsEntityPermissionService).deletePermissionsTreeFor(folder);
 	}
@@ -168,10 +169,12 @@ public class FSEntityServiceImplUnitTests {
 
 		when(fsEntityRepository.getFilesTreeByPath("/f1/"))
 			.thenReturn(List.of(file));
+		when(fsEntityRepository.getTreeByPath("/f1/"))
+			.thenReturn(List.of(file, folder));
 
 		service.deleteEntity(folder);
 
-		verify(fsEntityRepository).deleteAllTree(folder.getPath());
+		verify(fsEntityRepository).deleteAll(fsEntityRepository.getTreeByPath("/f1/"));
 		verify(diskService).deleteFiles(List.of(Path.of("/12345")));
 		verify(fsEntityPermissionService).deletePermissionsTreeFor(folder);
 	}

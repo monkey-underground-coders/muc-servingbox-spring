@@ -2,7 +2,10 @@ package com.a6raywa1cher.mucservingboxspring.model.file;
 
 import com.a6raywa1cher.mucservingboxspring.model.User;
 import com.a6raywa1cher.mucservingboxspring.utils.Views;
-import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonView;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -19,9 +22,6 @@ import java.util.stream.IntStream;
 @ToString(exclude = "createdBy")
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonIdentityInfo(
-	generator = ObjectIdGenerators.PropertyGenerator.class,
-	property = "id")
 public class FSEntity {
 	@Id
 	@GeneratedValue

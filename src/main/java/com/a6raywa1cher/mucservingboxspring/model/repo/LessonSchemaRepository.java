@@ -11,9 +11,11 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface LessonSchemaRepository extends PagingAndSortingRepository<LessonSchema, Long> {
-	@Query("from LessonSchema ls where fts('russian', ls.title, :searchQuery) = true and ls.creator = :user")
+	@Query("select ls from LessonSchema as ls where (fts('russian', ls.title, :searchQuery) = true) and ls.creator = :user")
 	Page<LessonSchema> findByTitleAndUser(@Param("searchQuery") String searchQuery, @Param("user") User creator, Pageable pageable);
 
 	@Query("from LessonSchema ls where fts('russian', ls.title, :searchQuery) = true")
 	Page<LessonSchema> findByTitle(@Param("searchQuery") String searchQuery, Pageable pageable);
+
+	Page<LessonSchema> findByCreator(User creator, Pageable pageable);
 }

@@ -1,7 +1,6 @@
 package com.a6raywa1cher.mucservingboxspring.model.repo;
 
 import com.a6raywa1cher.mucservingboxspring.model.file.FSEntity;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
@@ -23,10 +22,6 @@ public interface FSEntityRepository extends CrudRepository<FSEntity, Long> {
 
 	@Query("from FSEntity e where e.path like concat(:path, '%') and e.isFolder = true")
 	List<FSEntity> getFoldersTreeByPath(@Param("path") String path);
-
-	@Query("delete from FSEntity e where e.path like concat(:path, '%')")
-	@Modifying
-	void deleteAllTree(@Param("path") String path);
 
 	Optional<FSEntity> getById(Long id);
 }

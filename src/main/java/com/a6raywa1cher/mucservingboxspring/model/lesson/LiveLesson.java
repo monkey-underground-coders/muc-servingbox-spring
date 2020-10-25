@@ -4,7 +4,9 @@ import com.a6raywa1cher.mucservingboxspring.model.User;
 import com.a6raywa1cher.mucservingboxspring.model.file.FSEntity;
 import com.a6raywa1cher.mucservingboxspring.model.file.FSEntityPermission;
 import com.a6raywa1cher.mucservingboxspring.utils.Views;
-import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.annotation.JsonIdentityReference;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonView;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -19,9 +21,6 @@ import java.util.stream.Collectors;
 @Data
 @ToString(exclude = {"managedStudentPermissions", "creator"})
 @EqualsAndHashCode(exclude = {"managedStudentPermissions", "creator"})
-@JsonIdentityInfo(
-	generator = ObjectIdGenerators.PropertyGenerator.class,
-	property = "id")
 public class LiveLesson {
 	@Id
 	@GeneratedValue
@@ -34,7 +33,6 @@ public class LiveLesson {
 
 	@ManyToOne
 	@JsonView(Views.Public.class)
-	@JsonBackReference
 	private LessonSchema schema;
 
 	@Column
@@ -60,6 +58,7 @@ public class LiveLesson {
 
 	@ManyToOne
 	@JsonView(Views.Public.class)
+	@JsonIdentityReference(alwaysAsId = true)
 	private User creator;
 
 	@Transient

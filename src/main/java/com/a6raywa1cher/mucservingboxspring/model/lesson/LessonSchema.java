@@ -3,10 +3,7 @@ package com.a6raywa1cher.mucservingboxspring.model.lesson;
 import com.a6raywa1cher.mucservingboxspring.model.User;
 import com.a6raywa1cher.mucservingboxspring.model.file.FSEntity;
 import com.a6raywa1cher.mucservingboxspring.utils.Views;
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonView;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -16,11 +13,8 @@ import java.util.List;
 
 @Entity
 @Data
-@EqualsAndHashCode(exclude = {"genericFiles", "creator"})
-@ToString(exclude = {"genericFiles", "creator"})
-@JsonIdentityInfo(
-	generator = ObjectIdGenerators.PropertyGenerator.class,
-	property = "id")
+@EqualsAndHashCode(exclude = {"genericFiles", "creator", "liveLessons"})
+@ToString(exclude = {"genericFiles", "creator", "liveLessons"})
 public class LessonSchema {
 	@Id
 	@GeneratedValue
@@ -44,7 +38,7 @@ public class LessonSchema {
 	private FSEntity genericFiles;
 
 	@OneToMany(mappedBy = "schema")
-	@JsonManagedReference
+	@JsonView(Views.Detailed.class)
 	private List<LiveLesson> liveLessons;
 
 	@Column

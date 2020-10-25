@@ -79,8 +79,12 @@ public class LiveLessonServiceImpl implements LiveLessonService {
 
 	@Override
 	public Page<LiveLesson> getPage(List<String> searchWords, Pageable pageable) {
-		return repository.findByName(FullTextSearchSQLFunction.searchWordsToQueryParam(searchWords),
-			pageable);
+		if (searchWords.size() > 0) {
+			return repository.findByName(FullTextSearchSQLFunction.searchWordsToQueryParam(searchWords),
+				pageable);
+		} else {
+			return repository.findAll(pageable);
+		}
 	}
 
 	@Override
@@ -121,10 +125,13 @@ public class LiveLessonServiceImpl implements LiveLessonService {
 
 	@Override
 	public void delete(LiveLesson lesson) {
-		fsEntityService.deleteEntity(lesson.getRoot());
-		permissionService.delete(lesson.getManagedStudentPermissions());
+		FSEntity root = lesson.getRoot();
+		List<FSEntityPermission> managedStudentPermissions = lesson.getManagedStudentPermissions();
+		lesson.setRoot(null);
 		lesson.setManagedStudentPermissions(new ArrayList<>());
-		LiveLesson saved = repository.save(lesson);
-		repository.delete(saved);
+		repository.save(lesson);
+		fsEntityService.deleteEntity(root);
+		permissionService.delete(managedStudentPermissions);
+		repository.delete(lesson);
 	}
 }

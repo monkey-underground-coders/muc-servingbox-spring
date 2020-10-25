@@ -194,7 +194,7 @@ public class FSEntityServiceImpl implements FSEntityService {
 					pair != null ? pair.getFirst().toString() : null,
 					entity.getHidden(),
 					pair != null ? pair.getSecond() : 0,
-					entity.getCreatedBy());
+					creator);
 				if (entity.getPath().equals(object.getPath())) {
 					out.set(node);
 				}
@@ -233,12 +233,13 @@ public class FSEntityServiceImpl implements FSEntityService {
 					entity.getDiskObjectPath(),
 					entity.getHidden(),
 					entity.getByteSize(),
-					entity.getCreatedBy());
+					creator);
 				if (entity.getPath().equals(object.getPath())) {
 					out.set(node);
 				}
 			});
-			repository.deleteAllTree(object.getPath());
+//			repository.deleteAllTree(object.getPath());
+			repository.deleteAll(repository.getTreeByPath(object.getPath()));
 			permissionService.deletePermissionsTreeFor(object);
 			return out.get();
 		}
@@ -256,7 +257,7 @@ public class FSEntityServiceImpl implements FSEntityService {
 				.map(s -> Path.of(s.getDiskObjectPath()))
 				.collect(Collectors.toList()));
 			permissionService.deletePermissionsTreeFor(entity);
-			repository.deleteAllTree(entity.getPath());
+			repository.deleteAll(repository.getTreeByPath(entity.getPath()));
 		}
 	}
 }

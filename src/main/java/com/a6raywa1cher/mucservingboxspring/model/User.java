@@ -3,7 +3,9 @@ package com.a6raywa1cher.mucservingboxspring.model;
 import com.a6raywa1cher.mucservingboxspring.model.file.FSEntity;
 import com.a6raywa1cher.mucservingboxspring.model.lesson.LessonSchema;
 import com.a6raywa1cher.mucservingboxspring.utils.Views;
-import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonView;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -15,11 +17,8 @@ import java.util.List;
 
 @Entity
 @Data
-@EqualsAndHashCode(exclude = "schemaList")
-@ToString(exclude = "schemaList")
-@JsonIdentityInfo(
-	generator = ObjectIdGenerators.PropertyGenerator.class,
-	property = "id")
+@EqualsAndHashCode(exclude = {"schemaList", "rootFolder"})
+@ToString(exclude = {"schemaList", "rootFolder"})
 public class User {
 	@Id
 	@GeneratedValue

@@ -13,17 +13,21 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.transaction.Transactional;
 import javax.validation.Valid;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/schema")
+@Transactional(rollbackOn = Exception.class)
 public class LessonSchemaController {
 	private final LessonSchemaService schemaService;
 	private final UserService userService;
@@ -34,7 +38,7 @@ public class LessonSchemaController {
 	}
 
 	@PostMapping("/create")
-	@JsonView(Views.Public.class)
+	@JsonView(Views.Detailed.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
 	public ResponseEntity<LessonSchema> createLessonSchema(@RequestBody @Valid CreateLessonSchemaRequest request,
 														   @Parameter(hidden = true) User user) {
@@ -46,22 +50,24 @@ public class LessonSchemaController {
 	}
 
 	@GetMapping("/{lid:[0-9]+}")
-	@JsonView(Views.Public.class)
+	@JsonView(Views.Detailed.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
 	public ResponseEntity<LessonSchema> getById(@PathVariable long lid) {
 		return schemaService.getById(lid).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
 	}
 
 	@GetMapping("/search")
-	@JsonView(Views.Public.class)
+	@JsonView(Views.Detailed.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
-	public ResponseEntity<Page<LessonSchema>> getByTitle(@RequestParam("word") List<String> searchWords,
+	public ResponseEntity<Page<LessonSchema>> getByTitle(@RequestParam(value = "word", required = false) List<String> searchWords,
 														 @RequestParam(value = "uid", required = false) Long uid,
-														 Pageable pageable) {
-		Optional<User> creator = userService.getById(uid);
-		List<String> escapedSearchWords = searchWords.stream()
+														 @RequestParam(required = false) Pageable pageable) {
+		Optional<User> creator = uid == null ? Optional.empty() : userService.getById(uid);
+		pageable = pageable == null ? PageRequest.of(0, 20) : pageable;
+		List<String> escapedSearchWords = searchWords != null ? searchWords.stream()
 			.map(LocalHtmlUtils::htmlEscape)
-			.collect(Collectors.toList());
+			.collect(Collectors.toList()) :
+			new ArrayList<>();
 		if (creator.isEmpty()) {
 			return ResponseEntity.ok(schemaService.getPage(escapedSearchWords, pageable));
 		} else {
@@ -70,7 +76,7 @@ public class LessonSchemaController {
 	}
 
 	@PutMapping("/{lid:[0-9]+}")
-	@JsonView(Views.Public.class)
+	@JsonView(Views.Detailed.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
 	public ResponseEntity<LessonSchema> editLessonSchema(@RequestBody @Valid EditLessonSchemaRequest request, @PathVariable long lid) {
 		Optional<LessonSchema> byId = schemaService.getById(lid);
@@ -84,7 +90,6 @@ public class LessonSchemaController {
 	}
 
 	@DeleteMapping("/{lid:[0-9]+}")
-	@JsonView(Views.Public.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
 	public ResponseEntity<Void> delete(@PathVariable long lid) {
 		Optional<LessonSchema> byId = schemaService.getById(lid);
