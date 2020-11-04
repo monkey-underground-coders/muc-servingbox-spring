@@ -97,7 +97,7 @@ public class FSEntityPermissionServiceImplIntegrationTests {
 		);
 		assertNotNull(publicFile);
 		FSEntityPermission permission = permissionService.create(
-			List.of(publicFolder),
+			publicFolder,
 			new ArrayList<>(),
 			List.of(UserRole.STUDENT, UserRole.TEMPORARY_USER),
 			false,
@@ -128,7 +128,15 @@ public class FSEntityPermissionServiceImplIntegrationTests {
 		);
 
 		permissionService.create(
-			List.of(publicFile, publicFolder2),
+			publicFile,
+			List.of(teacher2),
+			new ArrayList<>(),
+			permission.getApplicationDefined(),
+			List.of(ActionType.READ, ActionType.WRITE)
+		);
+
+		permissionService.create(
+			publicFolder2,
 			List.of(teacher2),
 			new ArrayList<>(),
 			permission.getApplicationDefined(),
@@ -143,8 +151,8 @@ public class FSEntityPermissionServiceImplIntegrationTests {
 	}
 
 	private void checkPermissions(FSEntity entity, User user, boolean read, boolean write, boolean managePermissions) {
-		assertEquals(read, permissionService.check(entity, ActionType.READ, user));
-		assertEquals(write, permissionService.check(entity, ActionType.WRITE, user));
-		assertEquals(managePermissions, permissionService.check(entity, ActionType.MANAGE_PERMISSIONS, user));
+		assertEquals(String.format("Read check on entity %s failed", entity.getPath()), read, permissionService.check(entity, ActionType.READ, user));
+		assertEquals(String.format("Write check on entity %s failed", entity.getPath()), write, permissionService.check(entity, ActionType.WRITE, user));
+		assertEquals(String.format("M_P check on entity %s failed", entity.getPath()), managePermissions, permissionService.check(entity, ActionType.MANAGE_PERMISSIONS, user));
 	}
 }

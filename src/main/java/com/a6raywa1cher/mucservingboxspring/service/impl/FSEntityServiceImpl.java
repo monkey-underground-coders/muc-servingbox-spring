@@ -62,7 +62,7 @@ public class FSEntityServiceImpl implements FSEntityService {
 	}
 
 	private void createFullPermissions(FSEntity fsEntity, User user) {
-		permissionService.create(Collections.singletonList(fsEntity), Collections.singletonList(user),
+		permissionService.create(fsEntity, Collections.singletonList(user),
 			new ArrayList<>(), true, List.of(ActionType.values()));
 	}
 
@@ -131,6 +131,12 @@ public class FSEntityServiceImpl implements FSEntityService {
 	@Override
 	public Optional<FSEntity> getByPath(String path) {
 		return repository.findByPath(path).findAny();
+	}
+
+	@Override
+	public Optional<FSEntity> getParent(FSEntity child) {
+		String childPath = child.getPath();
+		return this.getByPath(childPath.substring(0, childPath.lastIndexOf('/')));
 	}
 
 	@Override

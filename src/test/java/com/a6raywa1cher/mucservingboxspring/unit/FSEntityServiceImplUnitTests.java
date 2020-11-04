@@ -1,7 +1,10 @@
 package com.a6raywa1cher.mucservingboxspring.unit;
 
 import com.a6raywa1cher.mucservingboxspring.model.User;
+import com.a6raywa1cher.mucservingboxspring.model.file.ActionType;
 import com.a6raywa1cher.mucservingboxspring.model.file.FSEntity;
+import com.a6raywa1cher.mucservingboxspring.model.lesson.LessonSchema;
+import com.a6raywa1cher.mucservingboxspring.model.lesson.LiveLesson;
 import com.a6raywa1cher.mucservingboxspring.model.repo.FSEntityRepository;
 import com.a6raywa1cher.mucservingboxspring.service.DiskService;
 import com.a6raywa1cher.mucservingboxspring.service.FSEntityPermissionService;
@@ -16,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -140,8 +144,6 @@ public class FSEntityServiceImplUnitTests {
 		assertEquals(Path.of("/12345"), Path.of(toCheck2.getDiskObjectPath()));
 		assertEquals(1L, toCheck2.getByteSize());
 
-//		verify(fsEntityRepository).deleteAllTree(any());
-//		verify(fsEntityRepository).deleteAllTree("/f1/");
 		verify(fsEntityRepository).deleteAll(List.of(folder, file));
 		verify(fsEntityPermissionService).deletePermissionsTreeFor(any());
 		verify(fsEntityPermissionService).deletePermissionsTreeFor(folder);
@@ -206,6 +208,83 @@ public class FSEntityServiceImplUnitTests {
 
 		verify(diskService).createFile(multipartFile);
 	}
+
+	@Test
+	public void createLessonRoot() {
+		FSEntityService service = new FSEntityServiceImpl(fsEntityRepository, fsEntityPermissionService, diskService);
+
+		User user = User.builder()
+			.id(42L)
+			.build();
+		LessonSchema lessonSchema = LessonSchema.builder()
+			.id(1337L)
+			.creator(user)
+			.build();
+
+		List<FSEntity> saved = getSaveTracker();
+
+		FSEntity output = service.createNewLessonRoot(lessonSchema);
+
+		assertEquals(1, saved.size());
+
+		FSEntity toCheck = saved.get(0);
+		assertEquals(toCheck, output);
+		assertEquals("/42/lroot/1337/root/", toCheck.getPath());
+		assertTrue(toCheck.isFolder());
+	}
+
+	@Test
+	public void createLiveLessonRoot() {
+		FSEntityService service = new FSEntityServiceImpl(fsEntityRepository, fsEntityPermissionService, diskService);
+
+		User user = User.builder()
+			.id(42L)
+			.build();
+		LessonSchema lessonSchema = LessonSchema.builder()
+			.id(1337L)
+			.creator(user)
+			.build();
+		LiveLesson liveLesson = LiveLesson.builder()
+			.id(256L)
+			.schema(lessonSchema)
+			.creator(user)
+			.build();
+
+		List<FSEntity> saved = getSaveTracker();
+
+		FSEntity output = service.createNewLiveLessonRoot(liveLesson);
+
+		assertEquals(1, saved.size());
+
+		FSEntity toCheck = saved.get(0);
+		assertEquals(toCheck, output);
+		assertEquals("/42/lroot/1337/256/", toCheck.getPath());
+		assertTrue(toCheck.isFolder());
+	}
+
+	@Test
+	public void createHome() {
+		FSEntityService service = new FSEntityServiceImpl(fsEntityRepository, fsEntityPermissionService, diskService);
+
+		User user = User.builder()
+			.id(42L)
+			.build();
+
+		List<FSEntity> saved = getSaveTracker();
+
+		FSEntity output = service.createNewHome(user);
+
+		assertEquals(1, saved.size());
+
+		FSEntity toCheck = saved.get(0);
+		assertEquals(toCheck, output);
+		assertEquals("/user_home/42/", toCheck.getPath());
+		assertTrue(toCheck.isFolder());
+
+		verify(fsEntityPermissionService).create(output, Collections.singletonList(user),
+			new ArrayList<>(), true, List.of(ActionType.values()));
+	}
+
 
 	private void mockDiskService() {
 		when(diskService.copyFile(any()))

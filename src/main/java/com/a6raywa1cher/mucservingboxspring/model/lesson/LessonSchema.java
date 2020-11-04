@@ -4,9 +4,7 @@ import com.a6raywa1cher.mucservingboxspring.model.User;
 import com.a6raywa1cher.mucservingboxspring.model.file.FSEntity;
 import com.a6raywa1cher.mucservingboxspring.utils.Views;
 import com.fasterxml.jackson.annotation.JsonView;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
+import lombok.*;
 
 import javax.persistence.*;
 import java.util.List;
@@ -15,6 +13,9 @@ import java.util.List;
 @Data
 @EqualsAndHashCode(exclude = {"genericFiles", "creator", "liveLessons"})
 @ToString(exclude = {"genericFiles", "creator", "liveLessons"})
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class LessonSchema {
 	@Id
 	@GeneratedValue

@@ -46,18 +46,18 @@ public class FSEntityPermissionServiceImpl implements FSEntityPermissionService 
 	}
 
 	@Override
-	public List<FSEntityPermission> getByFSEntity(FSEntity fsEntity) {
-		return repository.getAllByEntity(fsEntity);
+	public Optional<FSEntityPermission> getByFSEntity(FSEntity fsEntity) {
+		return repository.getByEntity(fsEntity);
 	}
 
 	@Override
-	public FSEntityPermission create(List<FSEntity> entityList, List<User> users, List<UserRole> userRoles, boolean applicationDefined, List<ActionType> actionTypes) {
-		return edit(new FSEntityPermission(), entityList, users, userRoles, applicationDefined, actionTypes);
+	public FSEntityPermission create(FSEntity entity, List<User> users, List<UserRole> userRoles, boolean applicationDefined, List<ActionType> actionTypes) {
+		return edit(new FSEntityPermission(), entity, users, userRoles, applicationDefined, actionTypes);
 	}
 
 	@Override
-	public FSEntityPermission edit(FSEntityPermission fsEntityPermission, List<FSEntity> entityList, List<User> users, List<UserRole> userRoles, boolean applicationDefined, List<ActionType> actionTypes) {
-		fsEntityPermission.setEntities(new ArrayList<>(entityList));
+	public FSEntityPermission edit(FSEntityPermission fsEntityPermission, FSEntity entity, List<User> users, List<UserRole> userRoles, boolean applicationDefined, List<ActionType> actionTypes) {
+		fsEntityPermission.setEntity(entity);
 		fsEntityPermission.setAffectedUserRoles(new ArrayList<>(userRoles));
 		fsEntityPermission.setAffectedUsers(new ArrayList<>(users));
 		fsEntityPermission.setApplicationDefined(applicationDefined);
@@ -76,9 +76,6 @@ public class FSEntityPermissionServiceImpl implements FSEntityPermissionService 
 
 	@Override
 	public List<FSEntity> getAllChildrenWithAccess(FSEntity parent, User user, ActionType actionType) {
-//		if (!repository.checkAccess(getUpperLevels(parent.getPath()), user.getId(), user.getUserRole(), actionType.allMasks)) {
-//			throw new InsufficientAccessToChildrenException();
-//		}
 		List<FSEntity> treeByPath = entityRepository.getTreeByPath(parent.getPath());
 		return treeByPath.stream().filter(e -> !parent.getId().equals(e.getId())).collect(Collectors.toList());
 	}

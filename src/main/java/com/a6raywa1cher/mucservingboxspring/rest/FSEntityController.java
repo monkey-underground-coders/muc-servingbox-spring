@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -36,6 +37,7 @@ public class FSEntityController {
 	}
 
 	@PostMapping(path = "/file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	@PreAuthorize("@mvcAccessChecker.checkLowerAccessById(#parentId, 'write')")
 	@JsonView(Views.Public.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
 	public ResponseEntity<FSEntity> uploadFile(
@@ -58,6 +60,7 @@ public class FSEntityController {
 	}
 
 	@PostMapping("/folder")
+	@PreAuthorize("@mvcAccessChecker.checkLowerAccessById(#request.getParentId(), 'write')")
 	@JsonView(Views.Public.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
 	public ResponseEntity<FSEntity> createFolder(@RequestBody @Valid CreateFolderRequest request, @Parameter(hidden = true) User creator) {
@@ -76,6 +79,7 @@ public class FSEntityController {
 	}
 
 	@GetMapping("/path")
+	@PreAuthorize("@mvcAccessChecker.checkEntityAccessByPath(#path, 'read')")
 	@JsonView(Views.Public.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
 	public ResponseEntity<FSEntity> resolvePath(@RequestParam String path) {
@@ -83,6 +87,7 @@ public class FSEntityController {
 	}
 
 	@PutMapping(path = "/{fid:[0-9]+}/content", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	@PreAuthorize("@mvcAccessChecker.checkEntityAccessById(#fid, 'write')")
 	@JsonView(Views.Public.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
 	public ResponseEntity<Void> updateContent(@PathVariable long fid, @RequestParam("file") MultipartFile multipartFile) {
@@ -99,6 +104,7 @@ public class FSEntityController {
 	}
 
 	@GetMapping(value = "/{fid:[0-9]+}/content", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+	@PreAuthorize("@mvcAccessChecker.checkEntityAccessById(#fid, 'read')")
 	@JsonView(Views.Public.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
 	public ResponseEntity<Resource> getContent(@PathVariable long fid, @RequestParam(value = "disposition", defaultValue = "attachment", required = false) String disposition) {
@@ -116,6 +122,7 @@ public class FSEntityController {
 	}
 
 	@PostMapping("/move")
+	@PreAuthorize("@mvcAccessChecker.checkEntityAccessById(#request.getObjectId(), 'write') && @mvcAccessChecker.checkLowerAccessById(#request.getTargetParentId(), 'write')")
 	@JsonView(Views.Public.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
 	public ResponseEntity<FSEntity> moveEntity(@RequestBody @Valid MoveEntityRequest request, @Parameter(hidden = true) User user) {
@@ -136,6 +143,7 @@ public class FSEntityController {
 	}
 
 	@PostMapping("/copy")
+	@PreAuthorize("@mvcAccessChecker.checkEntityAccessById(#request.getObjectId(), 'read') && #mvcAccessChecker.checkLowerAccessById(#request.getTargetParentId(), 'write')")
 	@JsonView(Views.Public.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
 	public ResponseEntity<FSEntity> copyEntity(@RequestBody @Valid MoveEntityRequest request, @Parameter(hidden = true) User user) {
@@ -156,6 +164,7 @@ public class FSEntityController {
 	}
 
 	@GetMapping("/{fid:[0-9]+}")
+	@PreAuthorize("@mvcAccessChecker.checkEntityAccessById(#fid, 'read')")
 	@JsonView(Views.Public.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
 	public ResponseEntity<FSEntity> getById(@PathVariable long fid) {
@@ -163,6 +172,7 @@ public class FSEntityController {
 	}
 
 	@DeleteMapping("/{fid:[0-9]+}")
+	@PreAuthorize("@mvcAccessChecker.checkEntityAccessById(#fid, 'write')")
 	@JsonView(Views.Public.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
 	public ResponseEntity<Void> delete(@PathVariable long fid) {

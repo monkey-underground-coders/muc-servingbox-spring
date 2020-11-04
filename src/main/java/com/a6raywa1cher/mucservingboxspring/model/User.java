@@ -6,9 +6,7 @@ import com.a6raywa1cher.mucservingboxspring.utils.Views;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonView;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
+import lombok.*;
 
 import javax.persistence.*;
 import java.time.ZonedDateTime;
@@ -19,7 +17,13 @@ import java.util.List;
 @Data
 @EqualsAndHashCode(exclude = {"schemaList", "rootFolder"})
 @ToString(exclude = {"schemaList", "rootFolder"})
+@AllArgsConstructor
+@Builder
 public class User {
+	@OneToMany(mappedBy = "creator")
+	@JsonView(Views.Internal.class)
+	private List<LessonSchema> schemaList;
+
 	@Id
 	@GeneratedValue
 	@JsonView(Views.Public.class)
@@ -41,9 +45,9 @@ public class User {
 	@JsonView(Views.Public.class)
 	private UserRole userRole;
 
-	@OneToMany(mappedBy = "creator")
-	@JsonView(Views.Internal.class)
-	private List<LessonSchema> schemaList = new ArrayList<>();
+	public User() {
+		schemaList = new ArrayList<>();
+	}
 
 	@Column
 	@JsonView(Views.Internal.class)

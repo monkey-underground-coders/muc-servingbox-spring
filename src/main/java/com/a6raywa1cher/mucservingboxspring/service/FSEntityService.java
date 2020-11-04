@@ -30,6 +30,8 @@ public interface FSEntityService {
 
 	Optional<FSEntity> getByPath(String path);
 
+	Optional<FSEntity> getParent(FSEntity child);
+
 	FSEntity modifyFile(FSEntity file, MultipartFile newContent);
 
 	FSEntity copyEntity(FSEntity object, FSEntity parent, String name,

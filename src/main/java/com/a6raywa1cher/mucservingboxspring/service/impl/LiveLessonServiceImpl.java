@@ -109,7 +109,7 @@ public class LiveLessonServiceImpl implements LiveLessonService {
 	public LiveLesson connect(LiveLesson lesson, User user) {
 		FSEntity folder = fsEntityService.createNewFolder(lesson.getRoot(), Long.toString(user.getId()),
 			false, user);
-		FSEntityPermission permission = permissionService.create(List.of(folder), List.of(user), new ArrayList<>(),
+		FSEntityPermission permission = permissionService.create(folder, List.of(user), new ArrayList<>(),
 			true, List.of(ActionType.READ, ActionType.WRITE));
 		lesson.getManagedStudentPermissions().add(permission);
 		return repository.save(lesson);

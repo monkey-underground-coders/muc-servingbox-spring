@@ -7,9 +7,7 @@ import com.a6raywa1cher.mucservingboxspring.utils.Views;
 import com.fasterxml.jackson.annotation.JsonIdentityReference;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonView;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
+import lombok.*;
 
 import javax.persistence.*;
 import java.time.ZonedDateTime;
@@ -21,6 +19,9 @@ import java.util.stream.Collectors;
 @Data
 @ToString(exclude = {"managedStudentPermissions", "creator"})
 @EqualsAndHashCode(exclude = {"managedStudentPermissions", "creator"})
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class LiveLesson {
 	@Id
 	@GeneratedValue

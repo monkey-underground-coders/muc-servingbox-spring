@@ -19,4 +19,17 @@ public enum ActionType {
 		}
 		this.allMasks = Collections.unmodifiableList(allMasks);
 	}
+
+	public static ActionType resolve(String name) {
+		switch (name) {
+			case "read":
+				return ActionType.READ;
+			case "write":
+				return ActionType.WRITE;
+			case "perm":
+				return ActionType.MANAGE_PERMISSIONS;
+			default:
+				throw new IllegalArgumentException();
+		}
+	}
 }

@@ -52,20 +52,20 @@ public class FSEntityPermissionController {
 	@GetMapping("/entity/{fid:[0-9]+}")
 	@JsonView(Views.Public.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
-	public ResponseEntity<List<FSEntityPermission>> getByEntity(@PathVariable long fid) {
+	public ResponseEntity<FSEntityPermission> getByEntity(@PathVariable long fid) {
 		Optional<FSEntity> optional = entityService.getById(fid);
 		if (optional.isEmpty()) {
 			return ResponseEntity.notFound().build();
 		}
-		return ResponseEntity.ok(permissionService.getByFSEntity(optional.get()));
+		return permissionService.getByFSEntity(optional.get()).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
 	}
 
 	@PostMapping("/create")
 	@JsonView(Views.Public.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
 	public ResponseEntity<FSEntityPermission> createPermission(@RequestBody @Valid CreatePermissionRequest request) {
-		List<FSEntity> fsEntityList = entityService.getById(request.getEntityIds()).collect(Collectors.toList());
-		if (fsEntityList.size() != request.getEntityIds().size()) {
+		Optional<FSEntity> optionalFSEntity = entityService.getById(request.getEntityId());
+		if (optionalFSEntity.isEmpty()) {
 			return ResponseEntity.notFound().build();
 		}
 		List<User> userList = userService.getById(request.getUserIds()).collect(Collectors.toList());
@@ -76,7 +76,7 @@ public class FSEntityPermissionController {
 			throw new ExpectingAnySubjectException();
 		}
 		return ResponseEntity.ok(
-			permissionService.create(fsEntityList, userList, request.getUserRoles(),
+			permissionService.create(optionalFSEntity.get(), userList, request.getUserRoles(),
 				false, request.getActionTypes())
 		);
 	}
@@ -94,8 +94,8 @@ public class FSEntityPermissionController {
 		if (permission.getApplicationDefined()) {
 			throw new ApplicationDefinedPermissionException();
 		}
-		List<FSEntity> fsEntityList = entityService.getById(request.getEntityIds()).collect(Collectors.toList());
-		if (fsEntityList.size() != request.getEntityIds().size()) {
+		Optional<FSEntity> optionalFSEntity = entityService.getById(request.getEntityId());
+		if (optionalFSEntity.isEmpty()) {
 			return ResponseEntity.notFound().build();
 		}
 		List<User> userList = userService.getById(request.getUserIds()).collect(Collectors.toList());
@@ -106,7 +106,7 @@ public class FSEntityPermissionController {
 			throw new ExpectingAnySubjectException();
 		}
 		return ResponseEntity.ok(
-			permissionService.edit(permission, fsEntityList, userList, request.getUserRoles(),
+			permissionService.edit(permission, optionalFSEntity.get(), userList, request.getUserRoles(),
 				false, request.getActionTypes())
 		);
 	}
