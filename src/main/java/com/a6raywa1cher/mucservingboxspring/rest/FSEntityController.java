@@ -117,7 +117,7 @@ public class FSEntityController {
 			throw new FileOperationOnFolderException();
 		}
 		return ResponseEntity.ok()
-			.header("Content-Disposition", disposition + "; filename=\"" + file.getName() + '"')
+			.header("Content-Disposition", disposition + ("attachment".equals(disposition) ? "; filename=\"" + file.getName() + '"' : ""))
 			.body(entityService.getFileContent(file));
 	}
 

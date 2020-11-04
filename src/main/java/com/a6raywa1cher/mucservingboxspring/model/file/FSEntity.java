@@ -2,14 +2,12 @@ package com.a6raywa1cher.mucservingboxspring.model.file;
 
 import com.a6raywa1cher.mucservingboxspring.model.User;
 import com.a6raywa1cher.mucservingboxspring.utils.Views;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonView;
+import com.fasterxml.jackson.annotation.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import org.springframework.util.Assert;
 
 import javax.persistence.*;
 import java.time.ZonedDateTime;
@@ -46,6 +44,10 @@ public class FSEntity {
 
 	@ManyToOne
 	@JsonView(Views.Public.class)
+	@JsonIdentityInfo(
+		generator = ObjectIdGenerators.PropertyGenerator.class,
+		property = "id")
+	@JsonIdentityReference(alwaysAsId = true)
 	private User createdBy;
 
 	@Column
@@ -91,10 +93,12 @@ public class FSEntity {
 	}
 
 	public static FSEntity createFile(String path, String diskObjectPath, long byteSize, User createdBy, boolean hidden) {
+		Assert.isTrue(path.charAt(path.length() - 1) != '/', "The path can't contain the path separator at the end");
 		return new FSEntity(null, path, false, diskObjectPath, hidden, createdBy, ZonedDateTime.now(), ZonedDateTime.now(), byteSize);
 	}
 
 	public static FSEntity createFolder(String path, User createdBy, boolean hidden) {
+		Assert.isTrue(path.charAt(path.length() - 1) == '/', "The path must contain the path separator at the end");
 		return new FSEntity(null, path, true, null, hidden, createdBy, ZonedDateTime.now(), ZonedDateTime.now(), 0);
 	}
 }

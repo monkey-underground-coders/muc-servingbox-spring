@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import javax.transaction.Transactional;
 import java.time.ZonedDateTime;
 import java.util.List;
 
@@ -23,6 +24,7 @@ public class ExpiredPermissionEntitiesRemoverComponent {
 	}
 
 	@Scheduled(fixedRateString = "${app.expired-remover-rate}")
+	@Transactional
 	public void removeExpiredPermissions() {
 		for (LiveLesson lesson : liveLessonRepository.findExpired(ZonedDateTime.now())) {
 			try {

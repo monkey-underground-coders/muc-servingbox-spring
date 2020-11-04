@@ -48,7 +48,7 @@ public class AuthController {
 	}
 
 	@GetMapping("/user")
-	@JsonView(Views.Internal.class)
+	@JsonView(Views.DetailedInternal.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
 	public ResponseEntity<User> getCurrentUser(@Parameter(hidden = true) User user) {
 		return ResponseEntity.ok(user);

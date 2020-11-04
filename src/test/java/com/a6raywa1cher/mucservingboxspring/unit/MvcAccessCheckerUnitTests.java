@@ -4,6 +4,7 @@ package com.a6raywa1cher.mucservingboxspring.unit;
 import com.a6raywa1cher.mucservingboxspring.model.User;
 import com.a6raywa1cher.mucservingboxspring.model.file.ActionType;
 import com.a6raywa1cher.mucservingboxspring.model.file.FSEntity;
+import com.a6raywa1cher.mucservingboxspring.model.file.FSEntityPermission;
 import com.a6raywa1cher.mucservingboxspring.security.MvcAccessChecker;
 import com.a6raywa1cher.mucservingboxspring.service.FSEntityPermissionService;
 import com.a6raywa1cher.mucservingboxspring.service.FSEntityService;
@@ -90,5 +91,25 @@ public class MvcAccessCheckerUnitTests {
 		assertTrue(checker.checkLowerAccessById(14L, ActionType.READ, authentication));
 		assertTrue(checker.checkLowerAccessById(14L, ActionType.WRITE, authentication));
 		assertTrue(checker.checkLowerAccessById(14L, ActionType.MANAGE_PERMISSIONS, authentication));
+	}
+
+	@Test
+	public void checkPermissionAccess() {
+		MvcAccessChecker checker = new MvcAccessChecker(fsEntityService, permissionService, resolver);
+
+		FSEntity targetFolder = FSEntity.createFolder("/f1/f2/", mock(User.class), false);
+		FSEntity parentFolder = FSEntity.createFolder("/f1/", mock(User.class), false);
+		FSEntityPermission fsEntityPermission = FSEntityPermission.builder()
+			.entity(targetFolder)
+			.build();
+		User user = mock(User.class, "user");
+		Authentication authentication = mock(Authentication.class);
+
+		when(fsEntityService.getParent(targetFolder)).thenReturn(Optional.of(parentFolder));
+		when(permissionService.check(parentFolder, ActionType.MANAGE_PERMISSIONS, user)).thenReturn(true);
+		when(permissionService.getById(16L)).thenReturn(Optional.of(fsEntityPermission));
+		when(resolver.getUser(authentication)).thenReturn(user);
+
+		assertTrue(checker.checkPermissionAccess(16L, authentication));
 	}
 }

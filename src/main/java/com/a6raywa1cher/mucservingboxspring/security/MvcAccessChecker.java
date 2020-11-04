@@ -12,10 +12,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
+import javax.transaction.Transactional;
 import java.util.Optional;
 
 @Component
 @Slf4j
+@Transactional
 public class MvcAccessChecker {
 	private final FSEntityService fsEntityService;
 	private final FSEntityPermissionService permissionService;
@@ -88,7 +90,7 @@ public class MvcAccessChecker {
 		return checkLowerAccessById(parentId, ActionType.resolve(actionType), getAuthentication());
 	}
 
-	// ------------------------------------------------ checkPermissionEditAccess ------------------------------------------------
+	// ------------------------------------------------ checkPermissionAccess ------------------------------------------------
 
 	public boolean checkPermissionAccess(Long id, Authentication authentication) {
 		User user = resolver.getUser(authentication);
