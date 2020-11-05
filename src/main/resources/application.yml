@@ -1,6 +1,6 @@
 #app:
 app:
-  version: '@project.version@'
+  version: '@project.version@ c:@git.commit.id.abbrev@_@git.build.time@ b:@maven.build.timestamp@'
   cors-allowed-origins: [ "*" ]
   upload-dir:
   temporary-user-access-duration: P1D
