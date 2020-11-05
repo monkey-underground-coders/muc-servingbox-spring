@@ -24,7 +24,7 @@ import java.util.stream.Stream;
 @Builder
 public class FSEntityPermission {
 
-	@OneToOne(optional = false)
+	@ManyToOne(optional = false)
 	@JsonView(Views.Public.class)
 	private FSEntity entity;
 

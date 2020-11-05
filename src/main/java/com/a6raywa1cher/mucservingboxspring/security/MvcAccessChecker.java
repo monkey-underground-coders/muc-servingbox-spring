@@ -102,6 +102,10 @@ public class MvcAccessChecker {
 		return this.checkEntityAccess(entity, ActionType.MANAGE_PERMISSIONS, user);
 	}
 
+	public boolean checkPermissionAccess(Long id) {
+		return this.checkPermissionAccess(id, getAuthentication());
+	}
+
 	private Authentication getAuthentication() {
 		return SecurityContextHolder.getContext().getAuthentication();
 	}

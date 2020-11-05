@@ -9,7 +9,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface FSEntityPermissionRepository extends CrudRepository<FSEntityPermission, Long> {
@@ -22,5 +21,5 @@ public interface FSEntityPermissionRepository extends CrudRepository<FSEntityPer
 	@Query("select p from FSEntityPermission p, FSEntity e where e.path like concat(:path, '%')")
 	List<FSEntityPermission> getAllByPath(@Param("path") String path);
 
-	Optional<FSEntityPermission> getByEntity(FSEntity fsEntity);
+	List<FSEntityPermission> getByEntity(FSEntity fsEntity);
 }

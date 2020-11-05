@@ -18,6 +18,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
@@ -52,15 +53,16 @@ public class FSEntityPermissionController {
 	@GetMapping("/entity/{fid:[0-9]+}")
 	@JsonView(Views.Public.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
-	public ResponseEntity<FSEntityPermission> getByEntity(@PathVariable long fid) {
+	public ResponseEntity<List<FSEntityPermission>> getByEntity(@PathVariable long fid) {
 		Optional<FSEntity> optional = entityService.getById(fid);
 		if (optional.isEmpty()) {
 			return ResponseEntity.notFound().build();
 		}
-		return permissionService.getByFSEntity(optional.get()).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+		return ResponseEntity.ok(permissionService.getByFSEntity(optional.get()));
 	}
 
 	@PostMapping("/create")
+	@PreAuthorize("@mvcAccessChecker.checkEntityAccessById(#request.getEntityId(), 'perm')")
 	@JsonView(Views.Public.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
 	public ResponseEntity<FSEntityPermission> createPermission(@RequestBody @Valid CreatePermissionRequest request) {
@@ -82,6 +84,7 @@ public class FSEntityPermissionController {
 	}
 
 	@PutMapping("/{pid:[0-9]+}")
+	@PreAuthorize("@mvcAccessChecker.checkPermissionAccess(#pid)")
 	@JsonView(Views.Public.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
 	public ResponseEntity<FSEntityPermission> editPermission(@RequestBody @Valid EditPermissionRequest request,
@@ -125,6 +128,7 @@ public class FSEntityPermissionController {
 	}
 
 	@DeleteMapping("/{pid:[0-9]+}")
+	@PreAuthorize("@mvcAccessChecker.checkPermissionAccess(#pid)")
 	@JsonView(Views.Public.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
 	public ResponseEntity<Void> deletePermission(@PathVariable long pid) {

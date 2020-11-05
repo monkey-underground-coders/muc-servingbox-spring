@@ -46,7 +46,7 @@ public class FSEntityPermissionServiceImpl implements FSEntityPermissionService 
 	}
 
 	@Override
-	public Optional<FSEntityPermission> getByFSEntity(FSEntity fsEntity) {
+	public List<FSEntityPermission> getByFSEntity(FSEntity fsEntity) {
 		return repository.getByEntity(fsEntity);
 	}
 
