@@ -16,6 +16,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
@@ -38,6 +40,7 @@ public class LessonSchemaController {
 	}
 
 	@PostMapping("/create")
+	@Secured({"ROLE_ADMIN", "ROLE_TEACHER"})
 	@JsonView(Views.Detailed.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
 	public ResponseEntity<LessonSchema> createLessonSchema(@RequestBody @Valid CreateLessonSchemaRequest request,
@@ -76,6 +79,7 @@ public class LessonSchemaController {
 	}
 
 	@PutMapping("/{lid:[0-9]+}")
+	@PreAuthorize("@mvcAccessChecker.checkSchemaWriteAccess(#lid)")
 	@JsonView(Views.Detailed.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
 	public ResponseEntity<LessonSchema> editLessonSchema(@RequestBody @Valid EditLessonSchemaRequest request, @PathVariable long lid) {
@@ -90,6 +94,7 @@ public class LessonSchemaController {
 	}
 
 	@DeleteMapping("/{lid:[0-9]+}")
+	@PreAuthorize("@mvcAccessChecker.checkSchemaWriteAccess(#lid)")
 	@Operation(security = @SecurityRequirement(name = "jwt"))
 	public ResponseEntity<Void> delete(@PathVariable long lid) {
 		Optional<LessonSchema> byId = schemaService.getById(lid);

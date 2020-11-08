@@ -143,7 +143,7 @@ public class FSEntityController {
 	}
 
 	@PostMapping("/copy")
-	@PreAuthorize("@mvcAccessChecker.checkEntityAccessById(#request.getObjectId(), 'read') && #mvcAccessChecker.checkLowerAccessById(#request.getTargetParentId(), 'write')")
+	@PreAuthorize("@mvcAccessChecker.checkEntityAccessById(#request.getObjectId(), 'read') && @mvcAccessChecker.checkLowerAccessById(#request.getTargetParentId(), 'write')")
 	@JsonView(Views.Public.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
 	public ResponseEntity<FSEntity> copyEntity(@RequestBody @Valid MoveEntityRequest request, @Parameter(hidden = true) User user) {

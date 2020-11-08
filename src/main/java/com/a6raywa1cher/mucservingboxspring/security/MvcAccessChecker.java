@@ -1,15 +1,17 @@
 package com.a6raywa1cher.mucservingboxspring.security;
 
 import com.a6raywa1cher.mucservingboxspring.model.User;
+import com.a6raywa1cher.mucservingboxspring.model.UserRole;
 import com.a6raywa1cher.mucservingboxspring.model.file.ActionType;
 import com.a6raywa1cher.mucservingboxspring.model.file.FSEntity;
 import com.a6raywa1cher.mucservingboxspring.model.file.FSEntityPermission;
+import com.a6raywa1cher.mucservingboxspring.model.lesson.LessonSchema;
 import com.a6raywa1cher.mucservingboxspring.service.FSEntityPermissionService;
 import com.a6raywa1cher.mucservingboxspring.service.FSEntityService;
+import com.a6raywa1cher.mucservingboxspring.service.LessonSchemaService;
+import com.a6raywa1cher.mucservingboxspring.service.LiveLessonService;
 import com.a6raywa1cher.mucservingboxspring.utils.AuthenticationResolver;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import javax.transaction.Transactional;
@@ -22,15 +24,20 @@ public class MvcAccessChecker {
 	private final FSEntityService fsEntityService;
 	private final FSEntityPermissionService permissionService;
 	private final AuthenticationResolver resolver;
+	private final LessonSchemaService schemaService;
+	private final LiveLessonService liveLessonService;
 
 	public MvcAccessChecker(FSEntityService fsEntityService, FSEntityPermissionService permissionService,
-							AuthenticationResolver resolver) {
+							AuthenticationResolver resolver, LessonSchemaService schemaService,
+							LiveLessonService liveLessonService) {
 		this.fsEntityService = fsEntityService;
 		this.permissionService = permissionService;
 		this.resolver = resolver;
+		this.schemaService = schemaService;
+		this.liveLessonService = liveLessonService;
 	}
 
-	// ------------------------------------------------ checkEntityAccess ------------------------------------------------
+	// ----------------------------------------------- checkEntityAccess -----------------------------------------------
 
 	private boolean checkEntityAccess(FSEntity fsEntity, ActionType actionType, User user) {
 		if (fsEntity.isFile() || actionType == ActionType.READ) {
@@ -42,8 +49,7 @@ public class MvcAccessChecker {
 		}
 	}
 
-	public boolean checkEntityAccessById(Long id, ActionType actionType, Authentication authentication) {
-		User user = resolver.getUser(authentication);
+	public boolean checkEntityAccessById(Long id, ActionType actionType, User user) {
 		Optional<FSEntity> optionalFSEntity = fsEntityService.getById(id);
 		if (optionalFSEntity.isEmpty()) {
 			return true; // 404 error will be thrown by the controller
@@ -52,8 +58,7 @@ public class MvcAccessChecker {
 		return checkEntityAccess(fsEntity, actionType, user);
 	}
 
-	public boolean checkEntityAccessByPath(String path, ActionType actionType, Authentication authentication) {
-		User user = resolver.getUser(authentication);
+	public boolean checkEntityAccessByPath(String path, ActionType actionType, User user) {
 		Optional<FSEntity> optionalFSEntity = fsEntityService.getByPath(path);
 		if (optionalFSEntity.isEmpty()) {
 			return true; // 404 error will be thrown by the controller
@@ -63,21 +68,20 @@ public class MvcAccessChecker {
 	}
 
 	public boolean checkEntityAccessById(Long id, String actionType) {
-		return checkEntityAccessById(id, ActionType.resolve(actionType), getAuthentication());
+		return checkEntityAccessById(id, ActionType.resolve(actionType), getCurrentUser());
 	}
 
 	public boolean checkEntityAccessByPath(String path, String actionType) {
-		return checkEntityAccessByPath(path, ActionType.resolve(actionType), getAuthentication());
+		return checkEntityAccessByPath(path, ActionType.resolve(actionType), getCurrentUser());
 	}
 
-	// ------------------------------------------------ checkLowerAccess ------------------------------------------------
+	// ------------------------------------------------ checkLowerAccess -----------------------------------------------
 
 	private boolean checkLowerAccess(FSEntity parent, ActionType actionType, User user) {
 		return permissionService.check(parent, actionType, user);
 	}
 
-	public boolean checkLowerAccessById(Long parentId, ActionType actionType, Authentication authentication) {
-		User user = resolver.getUser(authentication);
+	public boolean checkLowerAccessById(Long parentId, ActionType actionType, User user) {
 		Optional<FSEntity> optionalFSEntity = fsEntityService.getById(parentId);
 		if (optionalFSEntity.isEmpty()) {
 			return true; // 404 error will be thrown by the controller
@@ -87,13 +91,12 @@ public class MvcAccessChecker {
 	}
 
 	public boolean checkLowerAccessById(Long parentId, String actionType) {
-		return checkLowerAccessById(parentId, ActionType.resolve(actionType), getAuthentication());
+		return checkLowerAccessById(parentId, ActionType.resolve(actionType), getCurrentUser());
 	}
 
-	// ------------------------------------------------ checkPermissionAccess ------------------------------------------------
+	// --------------------------------------------- checkPermissionAccess ---------------------------------------------
 
-	public boolean checkPermissionAccess(Long id, Authentication authentication) {
-		User user = resolver.getUser(authentication);
+	public boolean checkPermissionAccess(Long id, User user) {
 		Optional<FSEntityPermission> entityPermission = permissionService.getById(id);
 		if (entityPermission.isEmpty()) {
 			return true; // 404 error will be thrown by the controller
@@ -103,10 +106,31 @@ public class MvcAccessChecker {
 	}
 
 	public boolean checkPermissionAccess(Long id) {
-		return this.checkPermissionAccess(id, getAuthentication());
+		return this.checkPermissionAccess(id, getCurrentUser());
 	}
 
-	private Authentication getAuthentication() {
-		return SecurityContextHolder.getContext().getAuthentication();
+	// --------------------------------------------- checkSchemaWriteAccess --------------------------------------------
+
+	public boolean checkSchemaWriteAccess(Long id, User user) {
+		Optional<LessonSchema> optionalLessonSchema = schemaService.getById(id);
+		if (optionalLessonSchema.isEmpty()) {
+			return true; // 404 error will be thrown by the controller
+		}
+		LessonSchema lessonSchema = optionalLessonSchema.get();
+		return user.getUserRole() == UserRole.ADMIN || lessonSchema.getCreator().equals(user);
+	}
+
+	public boolean checkSchemaWriteAccess(Long id) {
+		return this.checkSchemaWriteAccess(id, getCurrentUser());
+	}
+
+	// --------------------------------------------- checkLiveLessonAccess ---------------------------------------------
+
+	public boolean checkLiveLessonReadAccess(Long id, User user) {
+		return false;
+	}
+
+	private User getCurrentUser() {
+		return resolver.getUser();
 	}
 }

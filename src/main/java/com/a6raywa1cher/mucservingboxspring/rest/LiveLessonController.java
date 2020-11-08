@@ -21,6 +21,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
@@ -81,6 +82,7 @@ public class LiveLessonController {
 	}
 
 	@PostMapping("/on_fly")
+	@Secured({"ROLE_ADMIN", "ROLE_TEACHER"})
 	@JsonView(Views.Public.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
 	public ResponseEntity<LiveLesson> startOnTheFly(@RequestBody @Valid StartOnTheFlyLiveLessonRequest request, @Parameter(hidden = true) User user) {
