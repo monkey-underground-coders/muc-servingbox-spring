@@ -94,7 +94,7 @@ public class LiveLessonController {
 	}
 
 	@GetMapping("/{llid:[0-9]+}")
-	@JsonView(Views.Public.class)
+	@JsonView(Views.Detailed.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
 	public ResponseEntity<LiveLesson> getById(@PathVariable long llid) {
 		return liveLessonService.getById(llid).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());

@@ -27,7 +27,7 @@ public class LessonSchema {
 	private String title;
 
 	@Lob
-	@JsonView(Views.Public.class)
+	@JsonView(Views.Detailed.class)
 	private String description;
 
 	@ManyToOne
