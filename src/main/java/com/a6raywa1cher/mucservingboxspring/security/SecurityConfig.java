@@ -83,6 +83,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 			.antMatchers("/ws-entry").permitAll()
 			.antMatchers("/auth/convert").hasAuthority("CONVERTIBLE")
 			.antMatchers("/auth/get_access").permitAll()
+			.antMatchers("/live/active").permitAll()
 			.antMatchers("/logout").authenticated()
 			.antMatchers("/favicon.ico").permitAll()
 			.anyRequest().hasRole("USER")

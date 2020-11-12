@@ -3,6 +3,7 @@ package com.a6raywa1cher.mucservingboxspring.service;
 import com.a6raywa1cher.mucservingboxspring.model.User;
 import com.a6raywa1cher.mucservingboxspring.model.lesson.LessonSchema;
 import com.a6raywa1cher.mucservingboxspring.model.lesson.LiveLesson;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -17,9 +18,11 @@ public interface LiveLessonService {
 
 	LiveLesson startOnTheFly(String name, ZonedDateTime end, User creator);
 
-	Page<LiveLesson> getPageByCreator(List<String> searchWords, Pageable pageable, User creator);
+	Page<LiveLesson> getPageByCreator(BooleanExpression filter, Pageable pageable, User creator);
 
-	Page<LiveLesson> getPage(List<String> searchWords, Pageable pageable);
+	Page<LiveLesson> getPage(BooleanExpression filter, Pageable pageable);
+
+	List<LiveLesson> getActiveList();
 
 	Page<LiveLesson> getPageBySchema(LessonSchema schema, Pageable pageable);
 

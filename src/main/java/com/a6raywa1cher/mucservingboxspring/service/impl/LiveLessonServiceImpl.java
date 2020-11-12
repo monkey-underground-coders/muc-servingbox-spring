@@ -7,12 +7,13 @@ import com.a6raywa1cher.mucservingboxspring.model.file.FSEntity;
 import com.a6raywa1cher.mucservingboxspring.model.file.FSEntityPermission;
 import com.a6raywa1cher.mucservingboxspring.model.lesson.LessonSchema;
 import com.a6raywa1cher.mucservingboxspring.model.lesson.LiveLesson;
+import com.a6raywa1cher.mucservingboxspring.model.lesson.QLiveLesson;
 import com.a6raywa1cher.mucservingboxspring.model.repo.LiveLessonRepository;
 import com.a6raywa1cher.mucservingboxspring.service.FSEntityPermissionService;
 import com.a6raywa1cher.mucservingboxspring.service.FSEntityService;
 import com.a6raywa1cher.mucservingboxspring.service.LessonSchemaService;
 import com.a6raywa1cher.mucservingboxspring.service.LiveLessonService;
-import com.a6raywa1cher.mucservingboxspring.utils.hibernate.FullTextSearchSQLFunction;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -72,19 +73,19 @@ public class LiveLessonServiceImpl implements LiveLessonService {
 	}
 
 	@Override
-	public Page<LiveLesson> getPageByCreator(List<String> searchWords, Pageable pageable, User creator) {
-		return repository.findByNameAndUser(FullTextSearchSQLFunction.searchWordsToQueryParam(searchWords),
-			creator, pageable);
+	public Page<LiveLesson> getPageByCreator(BooleanExpression filter, Pageable pageable, User creator) {
+//		PathBuilder<LiveLesson> path = new PathBuilder<>(LiveLesson.class, "live");
+		return repository.findAll(filter.and(QLiveLesson.liveLesson.creator.eq(creator)), pageable);
 	}
 
 	@Override
-	public Page<LiveLesson> getPage(List<String> searchWords, Pageable pageable) {
-		if (searchWords.size() > 0) {
-			return repository.findByName(FullTextSearchSQLFunction.searchWordsToQueryParam(searchWords),
-				pageable);
-		} else {
-			return repository.findAll(pageable);
-		}
+	public Page<LiveLesson> getPage(BooleanExpression filter, Pageable pageable) {
+		return repository.findAll(filter, pageable);
+	}
+
+	@Override
+	public List<LiveLesson> getActiveList() {
+		return repository.findActive(ZonedDateTime.now());
 	}
 
 	@Override

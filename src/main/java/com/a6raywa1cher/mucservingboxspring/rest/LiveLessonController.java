@@ -3,6 +3,7 @@ package com.a6raywa1cher.mucservingboxspring.rest;
 import com.a6raywa1cher.mucservingboxspring.model.User;
 import com.a6raywa1cher.mucservingboxspring.model.lesson.LessonSchema;
 import com.a6raywa1cher.mucservingboxspring.model.lesson.LiveLesson;
+import com.a6raywa1cher.mucservingboxspring.model.predicate.impl.LiveLessonPredicate;
 import com.a6raywa1cher.mucservingboxspring.rest.exc.PastDateModificationException;
 import com.a6raywa1cher.mucservingboxspring.rest.exc.UserAlreadyConnectedException;
 import com.a6raywa1cher.mucservingboxspring.rest.req.EditLiveLessonRequest;
@@ -13,21 +14,24 @@ import com.a6raywa1cher.mucservingboxspring.service.LessonSchemaService;
 import com.a6raywa1cher.mucservingboxspring.service.LiveLessonService;
 import com.a6raywa1cher.mucservingboxspring.service.UserService;
 import com.a6raywa1cher.mucservingboxspring.utils.LocalHtmlUtils;
+import com.a6raywa1cher.mucservingboxspring.utils.RestUtils;
 import com.a6raywa1cher.mucservingboxspring.utils.Views;
 import com.fasterxml.jackson.annotation.JsonView;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import org.springdoc.core.converters.models.PageableAsQueryParam;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -47,9 +51,11 @@ public class LiveLessonController {
 	}
 
 	@PostMapping("/schedule")
+	@PreAuthorize("@mvcAccessChecker.checkSchemaWriteAccess(#request.getSchemaId())")
 	@JsonView(Views.Public.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
-	public ResponseEntity<LiveLesson> schedule(@RequestBody @Valid ScheduleLiveLessonRequest request, @Parameter(hidden = true) User user) {
+	public ResponseEntity<LiveLesson> schedule(@RequestBody @Valid ScheduleLiveLessonRequest request,
+											   @Parameter(hidden = true) User user) {
 		Optional<LessonSchema> optional = schemaService.getById(request.getSchemaId());
 		if (optional.isEmpty()) {
 			return ResponseEntity.notFound().build();
@@ -65,6 +71,7 @@ public class LiveLessonController {
 	}
 
 	@PostMapping("/start")
+	@PreAuthorize("@mvcAccessChecker.checkSchemaWriteAccess(#request.getSchemaId())")
 	@JsonView(Views.Public.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
 	public ResponseEntity<LiveLesson> start(@RequestBody @Valid StartLiveLessonRequest request, @Parameter(hidden = true) User user) {
@@ -110,22 +117,35 @@ public class LiveLessonController {
 			.orElse(ResponseEntity.notFound().build());
 	}
 
-	@GetMapping("/user/{uid:[0-9]+}")
+	@GetMapping("/user/self")
+	@Secured({"ROLE_TEACHER"})
 	@JsonView(Views.Public.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
-	public ResponseEntity<Page<LiveLesson>> getByCreator(@PathVariable long uid, @RequestParam(required = false) List<String> words,
-														 Pageable pageable) {
-		return userService.getById(uid).map(u -> liveLessonService.getPageByCreator(words == null ? new ArrayList<>() : words, pageable, u))
-			.map(ResponseEntity::ok)
-			.orElse(ResponseEntity.notFound().build());
+	@PageableAsQueryParam
+	public ResponseEntity<Page<LiveLesson>> getMyLiveLessons(@Parameter(hidden = true) Pageable pageable,
+															 @Parameter(hidden = true) User user,
+															 @RequestParam(required = false) String filter) {
+		BooleanExpression booleanExpression = RestUtils.decodeFilter(filter, LiveLessonPredicate.class);
+		return ResponseEntity.ok(liveLessonService.getPageByCreator(booleanExpression, pageable, user));
 	}
 
 	@GetMapping("/page")
+	@Secured({"ROLE_ADMIN"})
 	@JsonView(Views.Public.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
+	@PageableAsQueryParam
 	@Transactional
-	public ResponseEntity<Page<LiveLesson>> getPage(@RequestParam(required = false) List<String> words, Pageable pageable) {
-		return ResponseEntity.ok(liveLessonService.getPage(words == null ? new ArrayList<>() : words, pageable));
+	public ResponseEntity<Page<LiveLesson>> getPage(@Parameter(hidden = true) Pageable pageable,
+													@RequestParam(required = false) String filter) {
+		BooleanExpression booleanExpression = RestUtils.decodeFilter(filter, LiveLessonPredicate.class);
+		return ResponseEntity.ok(liveLessonService.getPage(booleanExpression, pageable));
+	}
+
+	@GetMapping("/active")
+	@JsonView(Views.Public.class)
+	@Transactional
+	public ResponseEntity<List<LiveLesson>> getActiveList() {
+		return ResponseEntity.ok(liveLessonService.getActiveList());
 	}
 
 	@PutMapping("/{llid:[0-9]+}")

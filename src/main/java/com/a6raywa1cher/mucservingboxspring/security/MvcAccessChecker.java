@@ -126,7 +126,7 @@ public class MvcAccessChecker {
 
 	// --------------------------------------------- checkLiveLessonAccess ---------------------------------------------
 
-	public boolean checkLiveLessonReadAccess(Long id, User user) {
+	public boolean checkLiveLessonAccess(Long id, User user) {
 		return false;
 	}
 
