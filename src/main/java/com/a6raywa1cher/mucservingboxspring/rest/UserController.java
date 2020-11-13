@@ -16,6 +16,7 @@ import com.fasterxml.jackson.annotation.JsonView;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -46,9 +47,9 @@ public class UserController {
 	}
 
 	@PostMapping("/create")
-//	@PreAuthorize("#mvcAccessChecker.haveAccessToCreateUser(#request.getUserRole(), #authentication)")
-	@JsonView(Views.Internal.class)
+	@Secured({"ROLE_ADMIN"})
 	@Operation(security = @SecurityRequirement(name = "jwt"))
+	@JsonView(Views.Internal.class)
 	public ResponseEntity<User> createUser(@RequestBody @Valid CreateUserRequest request, HttpServletRequest servletRequest) {
 		User user = userService.create(request.getUserRole(), request.getUsername(),
 			LocalHtmlUtils.htmlEscape(request.getName(), 255), request.getPassword(), servletRequest.getRemoteAddr());
@@ -63,15 +64,16 @@ public class UserController {
 	}
 
 	@GetMapping("/{uid:[0-9]+}/internal")
-	@JsonView(Views.Internal.class)
+	@Secured({"ROLE_ADMIN"})
 	@Operation(security = @SecurityRequirement(name = "jwt"))
+	@JsonView(Views.Internal.class)
 	public ResponseEntity<User> getByIdInternal(@PathVariable long uid) {
 		return userService.getById(uid).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
 	}
 
 	@PutMapping("/{uid:[0-9]+}/edit_name")
-	@JsonView(Views.Internal.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
+	@JsonView(Views.Internal.class)
 	public ResponseEntity<User> editName(@RequestBody @Valid ChangeNameOfUserRequest request, @PathVariable long uid) {
 		Optional<User> optional = userService.getById(uid);
 		if (optional.isEmpty()) {
@@ -83,8 +85,8 @@ public class UserController {
 	}
 
 	@PutMapping("/{uid:[0-9]+}/edit_password")
-	@JsonView(Views.Internal.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
+	@JsonView(Views.Internal.class)
 	public ResponseEntity<User> editPassword(@RequestBody @Valid ChangePasswordRequest request, @PathVariable long uid) {
 		Optional<User> optional = userService.getById(uid);
 		if (optional.isEmpty()) {
@@ -98,8 +100,8 @@ public class UserController {
 	}
 
 	@DeleteMapping("/{uid:[0-9]+}")
-	@JsonView(Views.Internal.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
+	@JsonView(Views.Internal.class)
 	public ResponseEntity<Void> delete(@PathVariable long uid) {
 		Optional<User> optional = userService.getById(uid);
 		if (optional.isEmpty()) {

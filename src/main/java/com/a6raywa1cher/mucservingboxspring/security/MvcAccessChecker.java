@@ -6,6 +6,7 @@ import com.a6raywa1cher.mucservingboxspring.model.file.ActionType;
 import com.a6raywa1cher.mucservingboxspring.model.file.FSEntity;
 import com.a6raywa1cher.mucservingboxspring.model.file.FSEntityPermission;
 import com.a6raywa1cher.mucservingboxspring.model.lesson.LessonSchema;
+import com.a6raywa1cher.mucservingboxspring.model.lesson.LiveLesson;
 import com.a6raywa1cher.mucservingboxspring.model.lesson.LiveLessonStatus;
 import com.a6raywa1cher.mucservingboxspring.service.FSEntityPermissionService;
 import com.a6raywa1cher.mucservingboxspring.service.FSEntityService;
@@ -146,7 +147,16 @@ public class MvcAccessChecker {
 	// --------------------------------------------- checkLiveLessonAccess ---------------------------------------------
 
 	public boolean checkLiveLessonAccess(Long id, User user) {
-		return false;
+		Optional<LiveLesson> optionalLiveLesson = liveLessonService.getById(id);
+		if (optionalLiveLesson.isEmpty()) {
+			return true; // 404 error will be thrown by the controller
+		}
+		LiveLesson liveLesson = optionalLiveLesson.get();
+		return user.getUserRole() == UserRole.ADMIN || liveLesson.getCreator().equals(user);
+	}
+
+	public boolean checkLiveLessonAccess(Long id) {
+		return this.checkLiveLessonAccess(id, getCurrentUser());
 	}
 
 	private User getCurrentUser() {

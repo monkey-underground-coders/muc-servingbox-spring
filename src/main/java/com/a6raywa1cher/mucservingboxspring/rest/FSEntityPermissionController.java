@@ -44,15 +44,15 @@ public class FSEntityPermissionController {
 	}
 
 	@GetMapping("/{pid:[0-9]+}")
-	@JsonView(Views.Public.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
+	@JsonView(Views.Public.class)
 	public ResponseEntity<FSEntityPermission> getById(@PathVariable long pid) {
 		return permissionService.getById(pid).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
 	}
 
 	@GetMapping("/entity/{fid:[0-9]+}")
-	@JsonView(Views.Public.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
+	@JsonView(Views.Public.class)
 	public ResponseEntity<List<FSEntityPermission>> getByEntity(@PathVariable long fid) {
 		Optional<FSEntity> optional = entityService.getById(fid);
 		if (optional.isEmpty()) {
@@ -63,8 +63,8 @@ public class FSEntityPermissionController {
 
 	@PostMapping("/create")
 	@PreAuthorize("@mvcAccessChecker.checkEntityAccessById(#request.getEntityId(), 'perm')")
-	@JsonView(Views.Public.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
+	@JsonView(Views.Public.class)
 	public ResponseEntity<FSEntityPermission> createPermission(@RequestBody @Valid CreatePermissionRequest request) {
 		Optional<FSEntity> optionalFSEntity = entityService.getById(request.getEntityId());
 		if (optionalFSEntity.isEmpty()) {
@@ -85,8 +85,8 @@ public class FSEntityPermissionController {
 
 	@PutMapping("/{pid:[0-9]+}")
 	@PreAuthorize("@mvcAccessChecker.checkPermissionAccess(#pid)")
-	@JsonView(Views.Public.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
+	@JsonView(Views.Public.class)
 	public ResponseEntity<FSEntityPermission> editPermission(@RequestBody @Valid EditPermissionRequest request,
 															 @PathVariable long pid) {
 		Optional<FSEntityPermission> optional = permissionService.getById(pid);
@@ -115,8 +115,9 @@ public class FSEntityPermissionController {
 	}
 
 	@GetMapping("/entity/{fid:[0-9]+}/children/")
-	@JsonView(Views.Public.class)
+	@PreAuthorize("@mvcAccessChecker.checkLowerAccessById(#fid, 'read')")
 	@Operation(security = @SecurityRequirement(name = "jwt"))
+	@JsonView(Views.Public.class)
 	public ResponseEntity<List<FSEntity>> getChildrenFSEntities(@PathVariable long fid, @Parameter(hidden = true) User user) {
 		Optional<FSEntity> optional = entityService.getById(fid);
 		if (optional.isEmpty()) {
@@ -129,8 +130,8 @@ public class FSEntityPermissionController {
 
 	@DeleteMapping("/{pid:[0-9]+}")
 	@PreAuthorize("@mvcAccessChecker.checkPermissionAccess(#pid)")
-	@JsonView(Views.Public.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
+	@JsonView(Views.Public.class)
 	public ResponseEntity<Void> deletePermission(@PathVariable long pid) {
 		Optional<FSEntityPermission> optional = permissionService.getById(pid);
 		if (optional.isEmpty()) {

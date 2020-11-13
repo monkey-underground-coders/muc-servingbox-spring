@@ -39,8 +39,8 @@ public class LessonSchemaController {
 
 	@PostMapping("/create")
 	@Secured({"ROLE_ADMIN", "ROLE_TEACHER"})
-	@JsonView(Views.Detailed.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
+	@JsonView(Views.Detailed.class)
 	public ResponseEntity<LessonSchema> createLessonSchema(@RequestBody @Valid CreateLessonSchemaRequest request,
 														   @Parameter(hidden = true) User user) {
 		return ResponseEntity.ok(schemaService.create(
@@ -52,16 +52,16 @@ public class LessonSchemaController {
 
 	@GetMapping("/{lid:[0-9]+}")
 	@PreAuthorize("@mvcAccessChecker.checkSchemaReadAccess(#lid)")
-	@JsonView(Views.Detailed.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
+	@JsonView(Views.Detailed.class)
 	public ResponseEntity<LessonSchema> getById(@PathVariable long lid) {
 		return schemaService.getById(lid).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
 	}
 
 	@GetMapping("/user/self")
 	@Secured({"ROLE_ADMIN", "ROLE_TEACHER"})
-	@JsonView(Views.Detailed.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
+	@JsonView(Views.Detailed.class)
 	@PageableAsQueryParam
 	public ResponseEntity<Page<LessonSchema>> searchSelf(@RequestParam(required = false) String filter,
 														 @Parameter(hidden = true) User user,
@@ -72,8 +72,8 @@ public class LessonSchemaController {
 
 	@GetMapping("/page")
 	@Secured({"ROLE_ADMIN"})
-	@JsonView(Views.Detailed.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
+	@JsonView(Views.Detailed.class)
 	@PageableAsQueryParam
 	public ResponseEntity<Page<LessonSchema>> search(@RequestParam(required = false) String filter,
 													 @Parameter(hidden = true) Pageable pageable) {
@@ -83,8 +83,8 @@ public class LessonSchemaController {
 
 	@PutMapping("/{lid:[0-9]+}")
 	@PreAuthorize("@mvcAccessChecker.checkSchemaWriteAccess(#lid)")
-	@JsonView(Views.Detailed.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
+	@JsonView(Views.Detailed.class)
 	public ResponseEntity<LessonSchema> editLessonSchema(@RequestBody @Valid EditLessonSchemaRequest request, @PathVariable long lid) {
 		Optional<LessonSchema> byId = schemaService.getById(lid);
 		if (byId.isEmpty()) {

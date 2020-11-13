@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIdentityReference;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import lombok.*;
+import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 import java.util.List;
@@ -31,6 +32,7 @@ public class LessonSchema {
 
 	@Lob
 	@JsonView(Views.Detailed.class)
+	@Type(type = "org.hibernate.type.TextType")
 	private String description;
 
 	@ManyToOne

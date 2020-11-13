@@ -38,8 +38,8 @@ public class FSEntityController {
 
 	@PostMapping(path = "/file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	@PreAuthorize("@mvcAccessChecker.checkLowerAccessById(#parentId, 'write')")
-	@JsonView(Views.Public.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
+	@JsonView(Views.Public.class)
 	public ResponseEntity<FSEntity> uploadFile(
 		@RequestParam("file") MultipartFile multipartFile,
 		@RequestParam("parent") long parentId,
@@ -61,8 +61,8 @@ public class FSEntityController {
 
 	@PostMapping("/folder")
 	@PreAuthorize("@mvcAccessChecker.checkLowerAccessById(#request.getParentId(), 'write')")
-	@JsonView(Views.Public.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
+	@JsonView(Views.Public.class)
 	public ResponseEntity<FSEntity> createFolder(@RequestBody @Valid CreateFolderRequest request, @Parameter(hidden = true) User creator) {
 		Optional<FSEntity> optionalParent = entityService.getById(request.getParentId());
 		if (optionalParent.isEmpty()) {
@@ -80,16 +80,16 @@ public class FSEntityController {
 
 	@GetMapping("/path")
 	@PreAuthorize("@mvcAccessChecker.checkEntityAccessByPath(#path, 'read')")
-	@JsonView(Views.Public.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
+	@JsonView(Views.Public.class)
 	public ResponseEntity<FSEntity> resolvePath(@RequestParam String path) {
 		return entityService.getByPath(path).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
 	}
 
 	@PutMapping(path = "/{fid:[0-9]+}/content", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	@PreAuthorize("@mvcAccessChecker.checkEntityAccessById(#fid, 'write')")
-	@JsonView(Views.Public.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
+	@JsonView(Views.Public.class)
 	public ResponseEntity<Void> updateContent(@PathVariable long fid, @RequestParam("file") MultipartFile multipartFile) {
 		Optional<FSEntity> optionalFSEntity = entityService.getById(fid);
 		if (optionalFSEntity.isEmpty()) {
@@ -105,8 +105,8 @@ public class FSEntityController {
 
 	@GetMapping(value = "/{fid:[0-9]+}/content", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
 	@PreAuthorize("@mvcAccessChecker.checkEntityAccessById(#fid, 'read')")
-	@JsonView(Views.Public.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
+	@JsonView(Views.Public.class)
 	public ResponseEntity<Resource> getContent(@PathVariable long fid, @RequestParam(value = "disposition", defaultValue = "attachment", required = false) String disposition) {
 		Optional<FSEntity> optionalFSEntity = entityService.getById(fid);
 		if (optionalFSEntity.isEmpty()) {
@@ -123,8 +123,8 @@ public class FSEntityController {
 
 	@PostMapping("/move")
 	@PreAuthorize("@mvcAccessChecker.checkEntityAccessById(#request.getObjectId(), 'write') && @mvcAccessChecker.checkLowerAccessById(#request.getTargetParentId(), 'write')")
-	@JsonView(Views.Public.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
+	@JsonView(Views.Public.class)
 	public ResponseEntity<FSEntity> moveEntity(@RequestBody @Valid MoveEntityRequest request, @Parameter(hidden = true) User user) {
 		Optional<FSEntity> optionalObject = entityService.getById(request.getObjectId());
 		Optional<FSEntity> optionalTargetParent = entityService.getById(request.getTargetParentId());
@@ -144,8 +144,8 @@ public class FSEntityController {
 
 	@PostMapping("/copy")
 	@PreAuthorize("@mvcAccessChecker.checkEntityAccessById(#request.getObjectId(), 'read') && @mvcAccessChecker.checkLowerAccessById(#request.getTargetParentId(), 'write')")
-	@JsonView(Views.Public.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
+	@JsonView(Views.Public.class)
 	public ResponseEntity<FSEntity> copyEntity(@RequestBody @Valid MoveEntityRequest request, @Parameter(hidden = true) User user) {
 		Optional<FSEntity> optionalObject = entityService.getById(request.getObjectId());
 		Optional<FSEntity> optionalTargetParent = entityService.getById(request.getTargetParentId());
@@ -165,16 +165,16 @@ public class FSEntityController {
 
 	@GetMapping("/{fid:[0-9]+}")
 	@PreAuthorize("@mvcAccessChecker.checkEntityAccessById(#fid, 'read')")
-	@JsonView(Views.Public.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
+	@JsonView(Views.Public.class)
 	public ResponseEntity<FSEntity> getById(@PathVariable long fid) {
 		return entityService.getById(fid).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
 	}
 
 	@DeleteMapping("/{fid:[0-9]+}")
 	@PreAuthorize("@mvcAccessChecker.checkEntityAccessById(#fid, 'write')")
-	@JsonView(Views.Public.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
+	@JsonView(Views.Public.class)
 	public ResponseEntity<Void> delete(@PathVariable long fid) {
 		Optional<FSEntity> optionalFSEntity = entityService.getById(fid);
 		if (optionalFSEntity.isEmpty()) {

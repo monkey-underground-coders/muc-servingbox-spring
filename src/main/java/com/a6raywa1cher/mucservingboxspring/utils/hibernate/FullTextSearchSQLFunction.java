@@ -47,11 +47,11 @@ public class FullTextSearchSQLFunction implements SQLFunction {
 			ftsConfig = (String) args.get(0);
 			field = (String) args.get(1);
 			value = (String) args.get(2);
-			fragment = "to_tsvector(" + ftsConfig + "::regconfig, " + field + ")" + " @@ to_tsquery(" + ftsConfig + ", " + value + ")";
+			fragment = "(to_tsvector(" + ftsConfig + "::regconfig, " + field + ")" + " @@ plainto_tsquery(" + ftsConfig + ", " + value + "))";
 		} else {
 			field = (String) args.get(0);
 			value = (String) args.get(1);
-			fragment = "to_tsvector(" + field + ")" + " @@ to_tsquery(" + value + ")";
+			fragment = "(to_tsvector(" + field + ")" + " @@ plainto_tsquery(" + value + "))";
 		}
 		return fragment;
 	}

@@ -31,6 +31,7 @@ public interface LessonSchemaRepository extends PagingAndSortingRepository<Lesso
 	default void customize(QuerydslBindings bindings, QLessonSchema root) {
 		bindings.bind(root.title).first(StringExpression::containsIgnoreCase);
 		bindings.bind(root.description).first((sp, value) -> Expressions.booleanTemplate("fts('russian', {0}, {1}) = true", sp, value));
+//		bindings.bind(root.description).first(StringExpression::containsIgnoreCase);
 		bindings.excluding(root.genericFiles, root.liveLessons);
 	}
 }

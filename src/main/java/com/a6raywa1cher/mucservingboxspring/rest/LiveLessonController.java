@@ -52,8 +52,8 @@ public class LiveLessonController {
 
 	@PostMapping("/schedule")
 	@PreAuthorize("@mvcAccessChecker.checkSchemaWriteAccess(#request.getSchemaId())")
-	@JsonView(Views.Public.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
+	@JsonView(Views.Public.class)
 	public ResponseEntity<LiveLesson> schedule(@RequestBody @Valid ScheduleLiveLessonRequest request,
 											   @Parameter(hidden = true) User user) {
 		Optional<LessonSchema> optional = schemaService.getById(request.getSchemaId());
@@ -72,8 +72,8 @@ public class LiveLessonController {
 
 	@PostMapping("/start")
 	@PreAuthorize("@mvcAccessChecker.checkSchemaWriteAccess(#request.getSchemaId())")
-	@JsonView(Views.Public.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
+	@JsonView(Views.Public.class)
 	public ResponseEntity<LiveLesson> start(@RequestBody @Valid StartLiveLessonRequest request, @Parameter(hidden = true) User user) {
 		Optional<LessonSchema> optional = schemaService.getById(request.getSchemaId());
 		if (optional.isEmpty()) {
@@ -90,8 +90,8 @@ public class LiveLessonController {
 
 	@PostMapping("/on_fly")
 	@Secured({"ROLE_ADMIN", "ROLE_TEACHER"})
-	@JsonView(Views.Public.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
+	@JsonView(Views.Public.class)
 	public ResponseEntity<LiveLesson> startOnTheFly(@RequestBody @Valid StartOnTheFlyLiveLessonRequest request, @Parameter(hidden = true) User user) {
 		return ResponseEntity.ok(liveLessonService.startOnTheFly(
 			LocalHtmlUtils.htmlEscape(request.getName(), 255),
@@ -101,8 +101,8 @@ public class LiveLessonController {
 	}
 
 	@GetMapping("/{llid:[0-9]+}")
-	@JsonView(Views.Detailed.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
+	@JsonView(Views.Detailed.class)
 	public ResponseEntity<LiveLesson> getById(@PathVariable long llid) {
 		return liveLessonService.getById(llid).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
 	}
@@ -119,8 +119,8 @@ public class LiveLessonController {
 
 	@GetMapping("/user/self")
 	@Secured({"ROLE_TEACHER"})
-	@JsonView(Views.Public.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
+	@JsonView(Views.Public.class)
 	@PageableAsQueryParam
 	public ResponseEntity<Page<LiveLesson>> getMyLiveLessons(@Parameter(hidden = true) Pageable pageable,
 															 @Parameter(hidden = true) User user,
@@ -131,8 +131,8 @@ public class LiveLessonController {
 
 	@GetMapping("/page")
 	@Secured({"ROLE_ADMIN"})
-	@JsonView(Views.Public.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
+	@JsonView(Views.Public.class)
 	@PageableAsQueryParam
 	@Transactional
 	public ResponseEntity<Page<LiveLesson>> getPage(@Parameter(hidden = true) Pageable pageable,
@@ -149,8 +149,9 @@ public class LiveLessonController {
 	}
 
 	@PutMapping("/{llid:[0-9]+}")
-	@JsonView(Views.Public.class)
+	@PreAuthorize("@mvcAccessChecker.checkLiveLessonAccess(#llid)")
 	@Operation(security = @SecurityRequirement(name = "jwt"))
+	@JsonView(Views.Public.class)
 	public ResponseEntity<LiveLesson> editLiveLesson(@RequestBody @Valid EditLiveLessonRequest request,
 													 @PathVariable long llid) {
 		Optional<LiveLesson> optionalLiveLesson = liveLessonService.getById(llid);
@@ -186,8 +187,9 @@ public class LiveLessonController {
 	}
 
 	@PostMapping("/{llid:[0-9]+}/stop")
-	@JsonView(Views.Public.class)
+	@PreAuthorize("@mvcAccessChecker.checkLiveLessonAccess(#llid)")
 	@Operation(security = @SecurityRequirement(name = "jwt"))
+	@JsonView(Views.Public.class)
 	public ResponseEntity<LiveLesson> stop(@PathVariable long llid) {
 		return liveLessonService.getById(llid)
 			.map(liveLessonService::stop)
@@ -196,8 +198,9 @@ public class LiveLessonController {
 	}
 
 	@DeleteMapping("/{llid:[0-9]+}")
-	@JsonView(Views.Public.class)
+	@PreAuthorize("@mvcAccessChecker.checkLiveLessonAccess(#llid)")
 	@Operation(security = @SecurityRequirement(name = "jwt"))
+	@JsonView(Views.Public.class)
 	public ResponseEntity<Void> delete(@PathVariable long llid) {
 		Optional<LiveLesson> optional = liveLessonService.getById(llid);
 		if (optional.isEmpty()) {

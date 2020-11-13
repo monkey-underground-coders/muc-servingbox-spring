@@ -27,8 +27,7 @@ public class ApplicationConfig {
 //		log.info("DB name: {}", getDbName());
 //		if ("postgresql".equals(getDbName())) {
 //			Query nativeQuery = entityManager.createNativeQuery(
-//				"create index if not exists path_length_index on fsentity_permission_entities ((length(entities_path)) desc);" +
-//					"create index if not exists path_to_path_length_index on fsentity_permission_entities (entities_path, (length(entities_path)) desc);"
+//				"create index if not exists idx_fts on public.lesson_schema using gin(to_tsvector('russian'::regconfig, description));"
 //			);
 //			nativeQuery.executeUpdate();
 //		}

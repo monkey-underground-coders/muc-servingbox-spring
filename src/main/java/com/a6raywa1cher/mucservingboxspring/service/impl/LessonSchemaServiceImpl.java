@@ -52,7 +52,7 @@ public class LessonSchemaServiceImpl implements LessonSchemaService {
 
 	@Override
 	public LessonSchema createOnFly(User creator) {
-		String title = String.format(onTheFlyTitle, ZonedDateTime.now().format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)));
+		String title = String.format(onTheFlyTitle, ZonedDateTime.now().format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT)));
 		return create(title, null, creator, true);
 	}
 
