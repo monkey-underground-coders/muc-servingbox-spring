@@ -3,7 +3,10 @@ package com.a6raywa1cher.mucservingboxspring.model.lesson;
 import com.a6raywa1cher.mucservingboxspring.model.User;
 import com.a6raywa1cher.mucservingboxspring.model.file.FSEntity;
 import com.a6raywa1cher.mucservingboxspring.utils.Views;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIdentityReference;
 import com.fasterxml.jackson.annotation.JsonView;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import lombok.*;
 
 import javax.persistence.*;
@@ -40,6 +43,10 @@ public class LessonSchema {
 
 	@OneToMany(mappedBy = "schema")
 	@JsonView(Views.Detailed.class)
+	@JsonIdentityInfo(
+		generator = ObjectIdGenerators.PropertyGenerator.class,
+		property = "id")
+	@JsonIdentityReference(alwaysAsId = true)
 	private List<LiveLesson> liveLessons;
 
 	@Column

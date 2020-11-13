@@ -2,18 +2,21 @@ package com.a6raywa1cher.mucservingboxspring.rest;
 
 import com.a6raywa1cher.mucservingboxspring.model.User;
 import com.a6raywa1cher.mucservingboxspring.model.lesson.LessonSchema;
+import com.a6raywa1cher.mucservingboxspring.model.predicate.impl.LessonSchemaPredicate;
 import com.a6raywa1cher.mucservingboxspring.rest.req.CreateLessonSchemaRequest;
 import com.a6raywa1cher.mucservingboxspring.rest.req.EditLessonSchemaRequest;
 import com.a6raywa1cher.mucservingboxspring.service.LessonSchemaService;
 import com.a6raywa1cher.mucservingboxspring.service.UserService;
 import com.a6raywa1cher.mucservingboxspring.utils.LocalHtmlUtils;
+import com.a6raywa1cher.mucservingboxspring.utils.RestUtils;
 import com.a6raywa1cher.mucservingboxspring.utils.Views;
 import com.fasterxml.jackson.annotation.JsonView;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import org.springdoc.core.converters.models.PageableAsQueryParam;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
@@ -22,21 +25,16 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
 import javax.validation.Valid;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/schema")
 @Transactional(rollbackOn = Exception.class)
 public class LessonSchemaController {
 	private final LessonSchemaService schemaService;
-	private final UserService userService;
 
 	public LessonSchemaController(LessonSchemaService schemaService, UserService userService) {
 		this.schemaService = schemaService;
-		this.userService = userService;
 	}
 
 	@PostMapping("/create")
@@ -53,29 +51,34 @@ public class LessonSchemaController {
 	}
 
 	@GetMapping("/{lid:[0-9]+}")
+	@PreAuthorize("@mvcAccessChecker.checkSchemaReadAccess(#lid)")
 	@JsonView(Views.Detailed.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
 	public ResponseEntity<LessonSchema> getById(@PathVariable long lid) {
 		return schemaService.getById(lid).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
 	}
 
-	@GetMapping("/search")
+	@GetMapping("/user/self")
+	@Secured({"ROLE_ADMIN", "ROLE_TEACHER"})
 	@JsonView(Views.Detailed.class)
 	@Operation(security = @SecurityRequirement(name = "jwt"))
-	public ResponseEntity<Page<LessonSchema>> getByTitle(@RequestParam(value = "word", required = false) List<String> searchWords,
-														 @RequestParam(value = "uid", required = false) Long uid,
-														 @RequestParam(required = false) Pageable pageable) {
-		Optional<User> creator = uid == null ? Optional.empty() : userService.getById(uid);
-		pageable = pageable == null ? PageRequest.of(0, 20) : pageable;
-		List<String> escapedSearchWords = searchWords != null ? searchWords.stream()
-			.map(LocalHtmlUtils::htmlEscape)
-			.collect(Collectors.toList()) :
-			new ArrayList<>();
-		if (creator.isEmpty()) {
-			return ResponseEntity.ok(schemaService.getPage(escapedSearchWords, pageable));
-		} else {
-			return ResponseEntity.ok(schemaService.getPage(escapedSearchWords, creator.get(), pageable));
-		}
+	@PageableAsQueryParam
+	public ResponseEntity<Page<LessonSchema>> searchSelf(@RequestParam(required = false) String filter,
+														 @Parameter(hidden = true) User user,
+														 @Parameter(hidden = true) Pageable pageable) {
+		BooleanExpression booleanExpression = RestUtils.decodeFilter(filter, LessonSchemaPredicate.class);
+		return ResponseEntity.ok(schemaService.getPage(booleanExpression, user, pageable));
+	}
+
+	@GetMapping("/page")
+	@Secured({"ROLE_ADMIN"})
+	@JsonView(Views.Detailed.class)
+	@Operation(security = @SecurityRequirement(name = "jwt"))
+	@PageableAsQueryParam
+	public ResponseEntity<Page<LessonSchema>> search(@RequestParam(required = false) String filter,
+													 @Parameter(hidden = true) Pageable pageable) {
+		BooleanExpression booleanExpression = RestUtils.decodeFilter(filter, LessonSchemaPredicate.class);
+		return ResponseEntity.ok(schemaService.getPage(booleanExpression, pageable));
 	}
 
 	@PutMapping("/{lid:[0-9]+}")

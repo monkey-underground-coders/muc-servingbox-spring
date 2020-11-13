@@ -3,10 +3,11 @@ package com.a6raywa1cher.mucservingboxspring.service.impl;
 import com.a6raywa1cher.mucservingboxspring.model.User;
 import com.a6raywa1cher.mucservingboxspring.model.file.FSEntity;
 import com.a6raywa1cher.mucservingboxspring.model.lesson.LessonSchema;
+import com.a6raywa1cher.mucservingboxspring.model.lesson.QLessonSchema;
 import com.a6raywa1cher.mucservingboxspring.model.repo.LessonSchemaRepository;
 import com.a6raywa1cher.mucservingboxspring.service.FSEntityService;
 import com.a6raywa1cher.mucservingboxspring.service.LessonSchemaService;
-import com.a6raywa1cher.mucservingboxspring.utils.hibernate.FullTextSearchSQLFunction;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -16,7 +17,6 @@ import org.springframework.stereotype.Service;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -62,21 +62,13 @@ public class LessonSchemaServiceImpl implements LessonSchemaService {
 	}
 
 	@Override
-	public Page<LessonSchema> getPage(List<String> searchWords, Pageable pageable) {
-		if (searchWords.size() > 0) {
-			return repository.findByTitle(FullTextSearchSQLFunction.searchWordsToQueryParam(searchWords), pageable);
-		} else {
-			return repository.findAll(pageable);
-		}
+	public Page<LessonSchema> getPage(BooleanExpression filter, Pageable pageable) {
+		return repository.findAll(filter, pageable);
 	}
 
 	@Override
-	public Page<LessonSchema> getPage(List<String> searchWords, User creator, Pageable pageable) {
-		if (searchWords.size() > 0) {
-			return repository.findByTitleAndUser(FullTextSearchSQLFunction.searchWordsToQueryParam(searchWords), creator, pageable);
-		} else {
-			return repository.findByCreator(creator, pageable);
-		}
+	public Page<LessonSchema> getPage(BooleanExpression filter, User creator, Pageable pageable) {
+		return repository.findAll(filter.and(QLessonSchema.lessonSchema.creator.eq(creator)), pageable);
 	}
 
 	@Override

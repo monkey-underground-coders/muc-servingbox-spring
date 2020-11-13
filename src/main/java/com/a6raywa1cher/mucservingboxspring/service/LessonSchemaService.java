@@ -2,10 +2,10 @@ package com.a6raywa1cher.mucservingboxspring.service;
 
 import com.a6raywa1cher.mucservingboxspring.model.User;
 import com.a6raywa1cher.mucservingboxspring.model.lesson.LessonSchema;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.util.List;
 import java.util.Optional;
 
 public interface LessonSchemaService {
@@ -15,9 +15,9 @@ public interface LessonSchemaService {
 
 	Optional<LessonSchema> getById(Long id);
 
-	Page<LessonSchema> getPage(List<String> searchWords, Pageable pageable);
+	Page<LessonSchema> getPage(BooleanExpression filter, Pageable pageable);
 
-	Page<LessonSchema> getPage(List<String> searchWords, User creator, Pageable pageable);
+	Page<LessonSchema> getPage(BooleanExpression filter, User creator, Pageable pageable);
 
 	LessonSchema editSchema(LessonSchema lessonSchema, String title, String description);
 

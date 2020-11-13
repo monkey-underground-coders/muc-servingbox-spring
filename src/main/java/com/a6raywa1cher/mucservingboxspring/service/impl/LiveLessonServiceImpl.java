@@ -74,7 +74,6 @@ public class LiveLessonServiceImpl implements LiveLessonService {
 
 	@Override
 	public Page<LiveLesson> getPageByCreator(BooleanExpression filter, Pageable pageable, User creator) {
-//		PathBuilder<LiveLesson> path = new PathBuilder<>(LiveLesson.class, "live");
 		return repository.findAll(filter.and(QLiveLesson.liveLesson.creator.eq(creator)), pageable);
 	}
 

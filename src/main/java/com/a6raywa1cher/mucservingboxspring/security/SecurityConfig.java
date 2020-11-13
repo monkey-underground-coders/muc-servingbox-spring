@@ -29,7 +29,7 @@ import java.util.Arrays;
 import java.util.Collections;
 
 @Configuration
-@EnableGlobalMethodSecurity(prePostEnabled = true)
+@EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true)
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	private final UserService userService;
 
@@ -92,11 +92,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 			.configurationSource(corsConfigurationSource(appConfigProperties));
 		http
 			.httpBasic()
+			.authenticationEntryPoint(new CustomAuthenticationEntryPoint())
 			.and()
 			.formLogin();
 		http
 			.exceptionHandling()
-			.authenticationEntryPoint(new CustomAuthenticationEntryPoint());
+//			.authenticationEntryPoint(new CustomAuthenticationEntryPoint())
+//			.accessDeniedHandler(new CustomAccessDeniedHandler())
+		;
 		http.addFilterBefore(new JwtAuthenticationFilter(jwtTokenService, authenticationManagerBean()), UsernamePasswordAuthenticationFilter.class);
 		http.addFilterAfter(new LastVisitFilter(userService, authenticationResolver), SecurityContextHolderAwareRequestFilter.class);
 //		http.addFilterBefore(new CriticalActionLimiterFilter(criticalActionLimiterService), JwtAuthenticationFilter.class);

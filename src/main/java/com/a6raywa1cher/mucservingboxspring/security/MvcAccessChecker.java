@@ -6,6 +6,7 @@ import com.a6raywa1cher.mucservingboxspring.model.file.ActionType;
 import com.a6raywa1cher.mucservingboxspring.model.file.FSEntity;
 import com.a6raywa1cher.mucservingboxspring.model.file.FSEntityPermission;
 import com.a6raywa1cher.mucservingboxspring.model.lesson.LessonSchema;
+import com.a6raywa1cher.mucservingboxspring.model.lesson.LiveLessonStatus;
 import com.a6raywa1cher.mucservingboxspring.service.FSEntityPermissionService;
 import com.a6raywa1cher.mucservingboxspring.service.FSEntityService;
 import com.a6raywa1cher.mucservingboxspring.service.LessonSchemaService;
@@ -107,6 +108,24 @@ public class MvcAccessChecker {
 
 	public boolean checkPermissionAccess(Long id) {
 		return this.checkPermissionAccess(id, getCurrentUser());
+	}
+
+	// --------------------------------------------- checkSchemaReadAccess ---------------------------------------------
+
+	public boolean checkSchemaReadAccess(Long id, User user) {
+		Optional<LessonSchema> optionalLessonSchema = schemaService.getById(id);
+		if (optionalLessonSchema.isEmpty()) {
+			return true; // 404 error will be thrown by the controller
+		}
+		LessonSchema lessonSchema = optionalLessonSchema.get();
+		if (user.getUserRole() == UserRole.ADMIN || user.equals(lessonSchema.getCreator())) {
+			return true;
+		}
+		return lessonSchema.getLiveLessons().stream().anyMatch(l -> l.getStatus() == LiveLessonStatus.LIVE);
+	}
+
+	public boolean checkSchemaReadAccess(Long id) {
+		return this.checkSchemaReadAccess(id, getCurrentUser());
 	}
 
 	// --------------------------------------------- checkSchemaWriteAccess --------------------------------------------
