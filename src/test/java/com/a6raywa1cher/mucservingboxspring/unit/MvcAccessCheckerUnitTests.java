@@ -6,10 +6,7 @@ import com.a6raywa1cher.mucservingboxspring.model.file.ActionType;
 import com.a6raywa1cher.mucservingboxspring.model.file.FSEntity;
 import com.a6raywa1cher.mucservingboxspring.model.file.FSEntityPermission;
 import com.a6raywa1cher.mucservingboxspring.security.MvcAccessChecker;
-import com.a6raywa1cher.mucservingboxspring.service.FSEntityPermissionService;
-import com.a6raywa1cher.mucservingboxspring.service.FSEntityService;
-import com.a6raywa1cher.mucservingboxspring.service.LessonSchemaService;
-import com.a6raywa1cher.mucservingboxspring.service.LiveLessonService;
+import com.a6raywa1cher.mucservingboxspring.service.*;
 import com.a6raywa1cher.mucservingboxspring.utils.AuthenticationResolver;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -35,10 +32,12 @@ public class MvcAccessCheckerUnitTests {
 	private LessonSchemaService schemaService;
 	@Mock
 	private LiveLessonService liveLessonService;
+	@Mock
+	private UserService userService;
 
 	@Test
 	public void checkFileAccessPath() {
-		MvcAccessChecker checker = new MvcAccessChecker(fsEntityService, permissionService, resolver, schemaService, liveLessonService);
+		MvcAccessChecker checker = new MvcAccessChecker(fsEntityService, permissionService, resolver, schemaService, liveLessonService, userService);
 
 		FSEntity targetFile = FSEntity.createFile("/f1/meow", "/134", 25L,
 			mock(User.class), false);
@@ -64,7 +63,7 @@ public class MvcAccessCheckerUnitTests {
 
 	@Test
 	public void checkFolderAccessPath() {
-		MvcAccessChecker checker = new MvcAccessChecker(fsEntityService, permissionService, resolver, schemaService, liveLessonService);
+		MvcAccessChecker checker = new MvcAccessChecker(fsEntityService, permissionService, resolver, schemaService, liveLessonService, userService);
 
 		FSEntity targetFolder = FSEntity.createFolder("/f1/f2/", mock(User.class), false);
 		FSEntity parentFolder = FSEntity.createFolder("/f1/", mock(User.class), false);
@@ -94,7 +93,7 @@ public class MvcAccessCheckerUnitTests {
 
 	@Test
 	public void checkPermissionAccess() {
-		MvcAccessChecker checker = new MvcAccessChecker(fsEntityService, permissionService, resolver, schemaService, liveLessonService);
+		MvcAccessChecker checker = new MvcAccessChecker(fsEntityService, permissionService, resolver, schemaService, liveLessonService, userService);
 
 		FSEntity targetFolder = FSEntity.createFolder("/f1/f2/", mock(User.class), false);
 		FSEntity parentFolder = FSEntity.createFolder("/f1/", mock(User.class), false);

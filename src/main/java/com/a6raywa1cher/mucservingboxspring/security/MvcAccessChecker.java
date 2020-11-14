@@ -8,10 +8,7 @@ import com.a6raywa1cher.mucservingboxspring.model.file.FSEntityPermission;
 import com.a6raywa1cher.mucservingboxspring.model.lesson.LessonSchema;
 import com.a6raywa1cher.mucservingboxspring.model.lesson.LiveLesson;
 import com.a6raywa1cher.mucservingboxspring.model.lesson.LiveLessonStatus;
-import com.a6raywa1cher.mucservingboxspring.service.FSEntityPermissionService;
-import com.a6raywa1cher.mucservingboxspring.service.FSEntityService;
-import com.a6raywa1cher.mucservingboxspring.service.LessonSchemaService;
-import com.a6raywa1cher.mucservingboxspring.service.LiveLessonService;
+import com.a6raywa1cher.mucservingboxspring.service.*;
 import com.a6raywa1cher.mucservingboxspring.utils.AuthenticationResolver;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -28,15 +25,17 @@ public class MvcAccessChecker {
 	private final AuthenticationResolver resolver;
 	private final LessonSchemaService schemaService;
 	private final LiveLessonService liveLessonService;
+	private final UserService userService;
 
 	public MvcAccessChecker(FSEntityService fsEntityService, FSEntityPermissionService permissionService,
 							AuthenticationResolver resolver, LessonSchemaService schemaService,
-							LiveLessonService liveLessonService) {
+							LiveLessonService liveLessonService, UserService userService) {
 		this.fsEntityService = fsEntityService;
 		this.permissionService = permissionService;
 		this.resolver = resolver;
 		this.schemaService = schemaService;
 		this.liveLessonService = liveLessonService;
+		this.userService = userService;
 	}
 
 	// ----------------------------------------------- checkEntityAccess -----------------------------------------------
@@ -144,7 +143,7 @@ public class MvcAccessChecker {
 		return this.checkSchemaWriteAccess(id, getCurrentUser());
 	}
 
-	// --------------------------------------------- checkLiveLessonAccess ---------------------------------------------
+	// ---------------------------------------------- checkLiveLessonAccess --------------------------------------------
 
 	public boolean checkLiveLessonAccess(Long id, User user) {
 		Optional<LiveLesson> optionalLiveLesson = liveLessonService.getById(id);
@@ -157,6 +156,40 @@ public class MvcAccessChecker {
 
 	public boolean checkLiveLessonAccess(Long id) {
 		return this.checkLiveLessonAccess(id, getCurrentUser());
+	}
+
+	// ------------------------------------------ checkUserInternalInfoAccess ------------------------------------------
+
+	public boolean checkUserInternalInfoAccess(Long id, User requester) {
+		if (requester.getId().equals(id)) {
+			return true;
+		}
+		return requester.getUserRole() == UserRole.ADMIN;
+	}
+
+	public boolean checkUserInternalInfoAccess(Long id) {
+		return this.checkUserInternalInfoAccess(id, getCurrentUser());
+	}
+
+	// ----------------------------------------- checkUserPasswordChangeAccess -----------------------------------------
+
+	public boolean checkUserPasswordChangeAccess(Long id, User requester) {
+		Optional<User> optionalUser = userService.getById(id);
+		if (optionalUser.isEmpty()) {
+			return true; // 404 error will be thrown by the controller
+		}
+		User target = optionalUser.get();
+		if (target.getUserRole() == UserRole.TEMPORARY_USER) {
+			return false;
+		}
+		if (requester.getId().equals(id)) {
+			return true;
+		}
+		return requester.getUserRole() == UserRole.ADMIN;
+	}
+
+	public boolean checkUserPasswordChangeAccess(Long id) {
+		return this.checkUserPasswordChangeAccess(id, getCurrentUser());
 	}
 
 	private User getCurrentUser() {

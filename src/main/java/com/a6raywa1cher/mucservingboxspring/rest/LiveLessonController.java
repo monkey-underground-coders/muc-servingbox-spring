@@ -12,7 +12,6 @@ import com.a6raywa1cher.mucservingboxspring.rest.req.StartLiveLessonRequest;
 import com.a6raywa1cher.mucservingboxspring.rest.req.StartOnTheFlyLiveLessonRequest;
 import com.a6raywa1cher.mucservingboxspring.service.LessonSchemaService;
 import com.a6raywa1cher.mucservingboxspring.service.LiveLessonService;
-import com.a6raywa1cher.mucservingboxspring.service.UserService;
 import com.a6raywa1cher.mucservingboxspring.utils.LocalHtmlUtils;
 import com.a6raywa1cher.mucservingboxspring.utils.RestUtils;
 import com.a6raywa1cher.mucservingboxspring.utils.Views;
@@ -41,13 +40,10 @@ import java.util.Optional;
 public class LiveLessonController {
 	private final LessonSchemaService schemaService;
 	private final LiveLessonService liveLessonService;
-	private final UserService userService;
 
-	public LiveLessonController(LessonSchemaService schemaService, LiveLessonService liveLessonService,
-								UserService userService) {
+	public LiveLessonController(LessonSchemaService schemaService, LiveLessonService liveLessonService) {
 		this.schemaService = schemaService;
 		this.liveLessonService = liveLessonService;
-		this.userService = userService;
 	}
 
 	@PostMapping("/schedule")

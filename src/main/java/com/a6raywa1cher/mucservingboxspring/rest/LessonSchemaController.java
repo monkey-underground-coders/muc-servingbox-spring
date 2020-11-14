@@ -6,7 +6,6 @@ import com.a6raywa1cher.mucservingboxspring.model.predicate.impl.LessonSchemaPre
 import com.a6raywa1cher.mucservingboxspring.rest.req.CreateLessonSchemaRequest;
 import com.a6raywa1cher.mucservingboxspring.rest.req.EditLessonSchemaRequest;
 import com.a6raywa1cher.mucservingboxspring.service.LessonSchemaService;
-import com.a6raywa1cher.mucservingboxspring.service.UserService;
 import com.a6raywa1cher.mucservingboxspring.utils.LocalHtmlUtils;
 import com.a6raywa1cher.mucservingboxspring.utils.RestUtils;
 import com.a6raywa1cher.mucservingboxspring.utils.Views;
@@ -33,7 +32,7 @@ import java.util.Optional;
 public class LessonSchemaController {
 	private final LessonSchemaService schemaService;
 
-	public LessonSchemaController(LessonSchemaService schemaService, UserService userService) {
+	public LessonSchemaController(LessonSchemaService schemaService) {
 		this.schemaService = schemaService;
 	}
 

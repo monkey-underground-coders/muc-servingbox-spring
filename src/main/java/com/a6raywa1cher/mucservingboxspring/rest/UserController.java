@@ -17,6 +17,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -64,7 +65,7 @@ public class UserController {
 	}
 
 	@GetMapping("/{uid:[0-9]+}/internal")
-	@Secured({"ROLE_ADMIN"})
+	@PreAuthorize("@mvcAccessChecker.checkUserInternalInfoAccess(#uid)")
 	@Operation(security = @SecurityRequirement(name = "jwt"))
 	@JsonView(Views.Internal.class)
 	public ResponseEntity<User> getByIdInternal(@PathVariable long uid) {
@@ -72,6 +73,7 @@ public class UserController {
 	}
 
 	@PutMapping("/{uid:[0-9]+}/edit_name")
+	@Secured({"ROLE_ADMIN"})
 	@Operation(security = @SecurityRequirement(name = "jwt"))
 	@JsonView(Views.Internal.class)
 	public ResponseEntity<User> editName(@RequestBody @Valid ChangeNameOfUserRequest request, @PathVariable long uid) {
@@ -85,6 +87,7 @@ public class UserController {
 	}
 
 	@PutMapping("/{uid:[0-9]+}/edit_password")
+	@PreAuthorize("@mvcAccessChecker.checkUserPasswordChangeAccess(#uid)")
 	@Operation(security = @SecurityRequirement(name = "jwt"))
 	@JsonView(Views.Internal.class)
 	public ResponseEntity<User> editPassword(@RequestBody @Valid ChangePasswordRequest request, @PathVariable long uid) {
@@ -100,6 +103,7 @@ public class UserController {
 	}
 
 	@DeleteMapping("/{uid:[0-9]+}")
+	@Secured({"ROLE_ADMIN"})
 	@Operation(security = @SecurityRequirement(name = "jwt"))
 	@JsonView(Views.Internal.class)
 	public ResponseEntity<Void> delete(@PathVariable long uid) {
