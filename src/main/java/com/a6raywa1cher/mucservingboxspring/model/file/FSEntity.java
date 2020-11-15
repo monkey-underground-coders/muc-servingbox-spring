@@ -64,6 +64,10 @@ public class FSEntity {
 	@JsonView(Views.Public.class)
 	private long byteSize;
 
+	@Column
+	@JsonView(Views.Public.class)
+	private long maxSize;
+
 	@Transient
 	@JsonIgnore
 	public boolean isFile() {
@@ -94,11 +98,15 @@ public class FSEntity {
 
 	public static FSEntity createFile(String path, String diskObjectPath, long byteSize, User createdBy, boolean hidden) {
 		Assert.isTrue(path.charAt(path.length() - 1) != '/', "The path can't contain the path separator at the end");
-		return new FSEntity(null, path, false, diskObjectPath, hidden, createdBy, ZonedDateTime.now(), ZonedDateTime.now(), byteSize);
+		return new FSEntity(null, path, false, diskObjectPath, hidden, createdBy, ZonedDateTime.now(), ZonedDateTime.now(), byteSize, -1);
 	}
 
 	public static FSEntity createFolder(String path, User createdBy, boolean hidden) {
+		return createFolder(path, createdBy, hidden, -1);
+	}
+
+	public static FSEntity createFolder(String path, User createdBy, boolean hidden, long maxSize) {
 		Assert.isTrue(path.charAt(path.length() - 1) == '/', "The path must contain the path separator at the end");
-		return new FSEntity(null, path, true, null, hidden, createdBy, ZonedDateTime.now(), ZonedDateTime.now(), 0);
+		return new FSEntity(null, path, true, null, hidden, createdBy, ZonedDateTime.now(), ZonedDateTime.now(), 0, maxSize);
 	}
 }

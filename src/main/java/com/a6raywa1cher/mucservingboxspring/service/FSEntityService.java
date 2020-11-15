@@ -14,6 +14,8 @@ import java.util.stream.Stream;
 public interface FSEntityService {
 	FSEntity createNewHome(User creator);
 
+	FSEntity createNewHome(User creator, long maxSize);
+
 	FSEntity createNewLessonRoot(LessonSchema lessonSchema);
 
 	FSEntity createNewLiveLessonRoot(LiveLesson lessonSchema);
@@ -31,6 +33,12 @@ public interface FSEntityService {
 	Optional<FSEntity> getByPath(String path);
 
 	Optional<FSEntity> getParent(FSEntity child);
+
+	long calculateSpaceLeft(String childPath);
+
+	long calculateMaxSize(String childPath);
+
+	FSEntity editMaxSize(FSEntity entity, long maxSize);
 
 	FSEntity modifyFile(FSEntity file, MultipartFile newContent);
 

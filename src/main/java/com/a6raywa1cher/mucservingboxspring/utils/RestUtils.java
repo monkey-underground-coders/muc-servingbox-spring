@@ -14,7 +14,7 @@ public class RestUtils {
 	public static BooleanExpression decodeFilter(String filter, Class<? extends AbstractPredicate> predicateClass) {
 		if (filter == null) return Expressions.asBoolean(true).isTrue();
 		PredicatesBuilder builder = new PredicatesBuilder(predicateClass);
-		Pattern pattern = Pattern.compile("([a-zA-Z0-9.]+?)([:<>])'(.+?)',");
+		Pattern pattern = Pattern.compile("([a-zA-Z0-9.\\[\\]]+?)([:<>])'(.+?)',");
 		Matcher matcher = pattern.matcher(filter + ",");
 		while (matcher.find()) {
 			String key = matcher.group(1);

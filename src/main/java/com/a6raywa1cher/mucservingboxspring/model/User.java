@@ -3,9 +3,7 @@ package com.a6raywa1cher.mucservingboxspring.model;
 import com.a6raywa1cher.mucservingboxspring.model.file.FSEntity;
 import com.a6raywa1cher.mucservingboxspring.model.lesson.LessonSchema;
 import com.a6raywa1cher.mucservingboxspring.utils.Views;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonView;
+import com.fasterxml.jackson.annotation.*;
 import lombok.*;
 
 import javax.persistence.*;
@@ -22,6 +20,10 @@ import java.util.List;
 public class User {
 	@OneToMany(mappedBy = "creator")
 	@JsonView(Views.Internal.class)
+	@JsonIdentityInfo(
+		generator = ObjectIdGenerators.PropertyGenerator.class,
+		property = "id")
+	@JsonIdentityReference(alwaysAsId = true)
 	private List<LessonSchema> schemaList;
 
 	@Id

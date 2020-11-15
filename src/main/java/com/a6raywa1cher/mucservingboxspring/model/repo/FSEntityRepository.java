@@ -23,5 +23,11 @@ public interface FSEntityRepository extends CrudRepository<FSEntity, Long> {
 	@Query("from FSEntity e where e.path like concat(:path, '%') and e.isFolder = true")
 	List<FSEntity> getFoldersTreeByPath(@Param("path") String path);
 
+	@Query("select sum(e.byteSize) from FSEntity e where e.path like concat(:path, '%') and e.isFolder = false and e.byteSize > 0")
+	Long countSubtreeFileSize(@Param("path") String path);
+
+	@Query("from FSEntity e where e.path in :paths")
+	List<FSEntity> findAllByPaths(@Param("paths") List<String> paths);
+
 	Optional<FSEntity> getById(Long id);
 }
