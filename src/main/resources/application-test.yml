@@ -6,6 +6,11 @@ app:
   temporary-user-access-duration: P1D
   temporary-user-name: "Временный ученик #%s"
   expired-remover-rate: 5000
+  max-sizes:
+    teacher-home: 50GB
+    student-home: 500MB
+    live-lesson-connected: 25MB
+  student-home-enabled: true
   first-admin:
     username: admin
     name: admin
