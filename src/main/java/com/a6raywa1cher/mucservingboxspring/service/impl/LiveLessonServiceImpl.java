@@ -14,9 +14,11 @@ import com.a6raywa1cher.mucservingboxspring.service.FSEntityService;
 import com.a6raywa1cher.mucservingboxspring.service.LessonSchemaService;
 import com.a6raywa1cher.mucservingboxspring.service.LiveLessonService;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.util.unit.DataSize;
 
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
@@ -31,6 +33,9 @@ public class LiveLessonServiceImpl implements LiveLessonService {
 	private final FSEntityService fsEntityService;
 	private final FSEntityPermissionService permissionService;
 	private final ExpiredPermissionEntitiesRemoverComponent removerComponent;
+
+	@Value("${app.max-sizes.live-lesson-connected}")
+	public DataSize liveLessonSize;
 
 	public LiveLessonServiceImpl(LiveLessonRepository repository, LessonSchemaService schemaService,
 								 FSEntityService fsEntityService, FSEntityPermissionService permissionService,
@@ -111,6 +116,7 @@ public class LiveLessonServiceImpl implements LiveLessonService {
 			false, user);
 		FSEntityPermission permission = permissionService.create(folder, List.of(user), new ArrayList<>(),
 			true, List.of(ActionType.READ, ActionType.WRITE));
+		fsEntityService.editMaxSize(folder, liveLessonSize.toBytes());
 		lesson.getManagedStudentPermissions().add(permission);
 		return repository.save(lesson);
 	}

@@ -2,9 +2,7 @@ package com.a6raywa1cher.mucservingboxspring.rest;
 
 import com.a6raywa1cher.mucservingboxspring.model.User;
 import com.a6raywa1cher.mucservingboxspring.model.file.FSEntity;
-import com.a6raywa1cher.mucservingboxspring.rest.exc.FileOperationOnFolderException;
-import com.a6raywa1cher.mucservingboxspring.rest.exc.FileWithThisNameAlreadyExistsException;
-import com.a6raywa1cher.mucservingboxspring.rest.exc.FolderOperationOnFileException;
+import com.a6raywa1cher.mucservingboxspring.rest.exc.*;
 import com.a6raywa1cher.mucservingboxspring.rest.req.CreateFolderRequest;
 import com.a6raywa1cher.mucservingboxspring.rest.req.MoveEntityRequest;
 import com.a6raywa1cher.mucservingboxspring.service.FSEntityService;
@@ -14,6 +12,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -45,6 +44,9 @@ public class FSEntityController {
 		@RequestParam("parent") long parentId,
 		@RequestParam("name") @Pattern(regexp = FS_NAME_REGEXP) @Valid String fileName,
 		@Parameter(hidden = true) User creator) {
+		if (multipartFile.getSize() <= 0) {
+			throw new EmptyFileException();
+		}
 		Optional<FSEntity> optionalParent = entityService.getById(parentId);
 		if (optionalParent.isEmpty()) {
 			return ResponseEntity.notFound().build();
@@ -55,6 +57,9 @@ public class FSEntityController {
 		}
 		if (isNonUniqueInThisParent(fileName, parent)) {
 			throw new FileWithThisNameAlreadyExistsException();
+		}
+		if (entityService.calculateSpaceLeft(parent.getPath()) - multipartFile.getSize() < 0) {
+			throw new ExceededMaximumSpaceCapacityException();
 		}
 		return ResponseEntity.ok(entityService.createNewFile(parent, fileName, multipartFile, false, creator));
 	}
@@ -91,6 +96,9 @@ public class FSEntityController {
 	@Operation(security = @SecurityRequirement(name = "jwt"))
 	@JsonView(Views.Public.class)
 	public ResponseEntity<Void> updateContent(@PathVariable long fid, @RequestParam("file") MultipartFile multipartFile) {
+		if (multipartFile.getSize() <= 0) {
+			throw new EmptyFileException();
+		}
 		Optional<FSEntity> optionalFSEntity = entityService.getById(fid);
 		if (optionalFSEntity.isEmpty()) {
 			return ResponseEntity.notFound().build();
@@ -99,7 +107,13 @@ public class FSEntityController {
 		if (file.isFolder()) {
 			throw new FileOperationOnFolderException();
 		}
-		entityService.modifyFile(file, multipartFile);
+		long delta = multipartFile.getSize() - file.getByteSize();
+		if (delta > 0 && entityService.calculateSpaceLeft(file.getParentPath()) - delta < 0) {
+			throw new ExceededMaximumSpaceCapacityException();
+		}
+		if (entityService.modifyFile(file, multipartFile) == null) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+		}
 		return ResponseEntity.ok().build();
 	}
 

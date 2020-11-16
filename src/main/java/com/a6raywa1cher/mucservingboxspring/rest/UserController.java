@@ -2,7 +2,9 @@ package com.a6raywa1cher.mucservingboxspring.rest;
 
 import com.a6raywa1cher.mucservingboxspring.model.User;
 import com.a6raywa1cher.mucservingboxspring.model.UserRole;
+import com.a6raywa1cher.mucservingboxspring.model.file.FSEntity;
 import com.a6raywa1cher.mucservingboxspring.rest.exc.UnacceptableRequestTowardsTemporaryUserException;
+import com.a6raywa1cher.mucservingboxspring.rest.req.ChangeHomeSizeRequest;
 import com.a6raywa1cher.mucservingboxspring.rest.req.ChangeNameOfUserRequest;
 import com.a6raywa1cher.mucservingboxspring.rest.req.ChangePasswordRequest;
 import com.a6raywa1cher.mucservingboxspring.rest.req.CreateUserRequest;
@@ -15,9 +17,11 @@ import com.a6raywa1cher.mucservingboxspring.utils.Views;
 import com.fasterxml.jackson.annotation.JsonView;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.util.unit.DataSize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -32,6 +36,15 @@ public class UserController {
 	private final UserService userService;
 	private final FSEntityService fsEntityService;
 	private final JwtRefreshPairService jwtRefreshPairService;
+
+	@Value("${app.student-home-enabled}")
+	public boolean studentHomeEnabled;
+
+	@Value("${app.max-sizes.student-home}")
+	public DataSize studentHomeSize;
+
+	@Value("${app.max-sizes.teacher-home}")
+	public DataSize teacherHomeSize;
 
 	public UserController(UserService userService, FSEntityService fsEntityService,
 						  JwtRefreshPairService jwtRefreshPairService) {
@@ -54,8 +67,30 @@ public class UserController {
 	public ResponseEntity<User> createUser(@RequestBody @Valid CreateUserRequest request, HttpServletRequest servletRequest) {
 		User user = userService.create(request.getUserRole(), request.getUsername(),
 			LocalHtmlUtils.htmlEscape(request.getName(), 255), request.getPassword(), servletRequest.getRemoteAddr());
-		User out = userService.editRootFolder(user, fsEntityService.createNewHome(user));
-		return ResponseEntity.ok(out);
+		FSEntity home;
+		switch (request.getUserRole()) {
+			case ADMIN:
+				home = fsEntityService.createNewHome(user);
+				break;
+			case TEACHER:
+				home = fsEntityService.createNewHome(user, teacherHomeSize.toBytes());
+				break;
+			case STUDENT:
+				if (studentHomeEnabled) {
+					home = fsEntityService.createNewHome(user, studentHomeSize.toBytes());
+				} else {
+					home = null;
+				}
+				break;
+			default:
+				home = null;
+				break;
+		}
+		if (home != null) {
+			return ResponseEntity.ok(userService.editRootFolder(user, home));
+		} else {
+			return ResponseEntity.ok(user);
+		}
 	}
 
 	@GetMapping("/{uid:[0-9]+}")
@@ -100,6 +135,32 @@ public class UserController {
 			throw new UnacceptableRequestTowardsTemporaryUserException();
 		}
 		return ResponseEntity.ok(userService.editPassword(user, request.getPassword()));
+	}
+
+	@PostMapping("/{uid:[0-9]+}/resize_home")
+	@Secured({"ROLE_ADMIN"})
+	@Operation(security = @SecurityRequirement(name = "jwt"))
+	@JsonView(Views.Internal.class)
+	public ResponseEntity<User> resizeHome(@RequestBody @Valid ChangeHomeSizeRequest request, @PathVariable long uid) {
+		Optional<User> optional = userService.getById(uid);
+		if (optional.isEmpty()) {
+			return ResponseEntity.notFound().build();
+		}
+		User user = optional.get();
+		FSEntity root = user.getRootFolder();
+		Long newSize = request.getNewSize();
+		if (newSize == 0 && root != null) {
+			User patched = userService.editRootFolder(user, null);
+			fsEntityService.deleteEntity(root);
+			return ResponseEntity.ok(patched);
+		} else if (root != null) {
+			fsEntityService.editMaxSize(root, newSize);
+			return ResponseEntity.ok(user);
+		} else {
+			root = fsEntityService.createNewHome(user, newSize);
+			User patched = userService.editRootFolder(user, root);
+			return ResponseEntity.ok(patched);
+		}
 	}
 
 	@DeleteMapping("/{uid:[0-9]+}")

@@ -120,7 +120,7 @@ public class DiskServiceImpl implements DiskService {
 
 	@Override
 	public Long modifyFile(Path path, MultipartFile file) {
-		return transferToPath(file, path);
+		return transferToPath(file, root.resolve(path));
 	}
 
 	@Override

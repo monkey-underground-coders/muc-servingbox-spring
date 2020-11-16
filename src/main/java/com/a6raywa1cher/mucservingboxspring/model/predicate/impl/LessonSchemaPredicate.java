@@ -1,11 +1,11 @@
 package com.a6raywa1cher.mucservingboxspring.model.predicate.impl;
 
 import com.a6raywa1cher.mucservingboxspring.model.lesson.LessonSchema;
+import com.a6raywa1cher.mucservingboxspring.model.lesson.LiveLesson;
+import com.a6raywa1cher.mucservingboxspring.model.lesson.QLiveLesson;
 import com.a6raywa1cher.mucservingboxspring.model.predicate.AbstractPredicate;
 import com.a6raywa1cher.mucservingboxspring.model.predicate.SearchCriteria;
-import com.querydsl.core.types.dsl.BooleanExpression;
-import com.querydsl.core.types.dsl.Expressions;
-import com.querydsl.core.types.dsl.PathBuilder;
+import com.querydsl.core.types.dsl.*;
 
 public class LessonSchemaPredicate extends AbstractPredicate {
 
@@ -30,5 +30,15 @@ public class LessonSchemaPredicate extends AbstractPredicate {
 			}
 		}
 		return super.getPredicate();
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	protected <T, J extends EntityPathBase<T>> ListPath<T, J> bindList(String variableName) {
+		if (variableName.equals("liveLessons")) {
+			return (ListPath<T, J>)
+				getPathBuilder().getList("liveLessons", LiveLesson.class, QLiveLesson.class);
+		}
+		return super.bindList(variableName);
 	}
 }

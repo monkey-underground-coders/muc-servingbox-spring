@@ -4,6 +4,7 @@ import com.a6raywa1cher.mucservingboxspring.model.lesson.LiveLesson;
 import com.a6raywa1cher.mucservingboxspring.model.predicate.AbstractPredicate;
 import com.a6raywa1cher.mucservingboxspring.model.predicate.SearchCriteria;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.ComparableExpression;
 import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.core.types.dsl.TimePath;
 
@@ -32,14 +33,7 @@ public class LiveLessonPredicate extends AbstractPredicate {
 			criteria.getKey().equals("createdAt")) {
 			TimePath<ZonedDateTime> path = entityPath.getTime(criteria.getKey(), ZonedDateTime.class);
 			ZonedDateTime value = ZonedDateTime.parse((String) criteria.getValue());
-			switch (criteria.getOperation()) {
-				case ":":
-					return path.eq(value);
-				case ">":
-					return path.goe(value);
-				case "<":
-					return path.loe(value);
-			}
+			return appendNumberOperation((ComparableExpression<ZonedDateTime>) path, criteria.getOperation(), (ZonedDateTime) value);
 		}
 
 		return super.getPredicate();

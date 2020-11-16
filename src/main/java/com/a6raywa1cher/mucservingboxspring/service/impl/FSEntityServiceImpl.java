@@ -22,6 +22,7 @@ import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -39,8 +40,8 @@ public class FSEntityServiceImpl implements FSEntityService {
 	}
 
 	private FSEntity createNode(String virtualPath, boolean isFolder, String diskObjectPath,
-								boolean hidden, long byteSize, User creator) {
-		return repository.save(createNodeNoSave(virtualPath, isFolder, diskObjectPath, hidden, byteSize, creator));
+								boolean hidden, long byteSize, long maxSize, User creator) {
+		return repository.save(createNodeNoSave(virtualPath, isFolder, diskObjectPath, hidden, byteSize, maxSize, creator));
 	}
 
 	private static URI resolveBetweenParents(URI originalParent, URI targetParent, URI entityUri) {
@@ -48,7 +49,7 @@ public class FSEntityServiceImpl implements FSEntityService {
 	}
 
 	private FSEntity createNodeNoSave(String virtualPath, boolean isFolder, String diskObjectPath,
-									  boolean hidden, long byteSize, User creator) {
+									  boolean hidden, long byteSize, long maxSize, User creator) {
 		FSEntity fsEntity = new FSEntity();
 		fsEntity.setPath(virtualPath);
 		fsEntity.setIsFolder(isFolder);
@@ -58,6 +59,7 @@ public class FSEntityServiceImpl implements FSEntityService {
 		fsEntity.setCreatedTimestamp(ZonedDateTime.now());
 		fsEntity.setModifiedTimestamp(ZonedDateTime.now());
 		fsEntity.setByteSize(byteSize);
+		fsEntity.setMaxSize(maxSize);
 		return fsEntity;
 	}
 
@@ -73,7 +75,7 @@ public class FSEntityServiceImpl implements FSEntityService {
 			true,
 			null,
 			false,
-			0, creator);
+			0, -1, creator);
 	}
 
 	@Override
@@ -85,7 +87,7 @@ public class FSEntityServiceImpl implements FSEntityService {
 			true,
 			null,
 			false,
-			0, creator);
+			0, -1, creator);
 	}
 
 	@Override
@@ -94,7 +96,47 @@ public class FSEntityServiceImpl implements FSEntityService {
 			true,
 			null,
 			hidden,
-			0, creator);
+			0, -1, creator);
+	}
+
+	@Override
+	public long calculateSpaceLeft(String childPath) {
+		List<String> parentPaths = IntStream.range(1, childPath.length())
+			.filter(i -> childPath.charAt(i) == '/')
+			.mapToObj(i -> childPath.substring(0, i + 1))
+			.collect(Collectors.toList());
+		List<FSEntity> parents = repository.findAllByPaths(parentPaths);
+		parents.sort(Comparator.comparing(f -> f.getPath().length(), Comparator.reverseOrder()));
+		return parents.stream()
+			.map(p -> {
+				if (p.getMaxSize() <= -1) return Long.MAX_VALUE;
+				Long consumed = repository.countSubtreeFileSize(childPath);
+				if (consumed == null) return p.getMaxSize();
+				return Math.max(0, p.getMaxSize() - consumed);
+			})
+			.min(Comparator.naturalOrder()).orElse(Long.MAX_VALUE);
+	}
+
+	@Override
+	public long calculateMaxSize(String childPath) {
+		List<String> parentPaths = IntStream.range(1, childPath.length())
+			.filter(i -> childPath.charAt(i) == '/')
+			.mapToObj(i -> childPath.substring(0, i + 1))
+			.collect(Collectors.toList());
+		List<FSEntity> parents = repository.findAllByPaths(parentPaths);
+		long maxSize = parents.stream()
+			.map(p -> {
+				if (p.getMaxSize() <= -1) return Long.MAX_VALUE;
+				return p.getMaxSize();
+			})
+			.min(Comparator.naturalOrder()).orElse(Long.MAX_VALUE);
+		return maxSize == Long.MAX_VALUE ? -1 : maxSize;
+	}
+
+	@Override
+	public FSEntity editMaxSize(FSEntity entity, long maxSize) {
+		entity.setMaxSize(maxSize);
+		return repository.save(entity);
 	}
 
 	@Override
@@ -109,7 +151,7 @@ public class FSEntityServiceImpl implements FSEntityService {
 			false,
 			diskObjectPath.toString(),
 			hidden,
-			size, creator);
+			size, -1, creator);
 	}
 
 	@Override
@@ -141,7 +183,7 @@ public class FSEntityServiceImpl implements FSEntityService {
 
 	@Override
 	public FSEntity modifyFile(FSEntity file, MultipartFile newContent) {
-		long size = diskService.modifyFile(Path.of(file.getPath()), newContent);
+		long size = diskService.modifyFile(Path.of(file.getDiskObjectPath()), newContent);
 		if (size == -1) {
 			return null;
 		}
@@ -152,11 +194,16 @@ public class FSEntityServiceImpl implements FSEntityService {
 
 	@Override
 	public FSEntity createNewHome(User creator) {
+		return this.createNewHome(creator, -1);
+	}
+
+	@Override
+	public FSEntity createNewHome(User creator, long maxSize) {
 		FSEntity fsEntity = createNode("/user_home/" + creator.getId() + '/',
 			true,
 			null,
 			false,
-			0, creator);
+			0, maxSize, creator);
 		createFullPermissions(fsEntity, creator);
 		return fsEntity;
 	}
@@ -177,6 +224,7 @@ public class FSEntityServiceImpl implements FSEntityService {
 				newFile.toString(),
 				hidden,
 				size,
+				-1,
 				creator
 			);
 		} else {
@@ -200,6 +248,7 @@ public class FSEntityServiceImpl implements FSEntityService {
 					pair != null ? pair.getFirst().toString() : null,
 					entity.getHidden(),
 					pair != null ? pair.getSecond() : 0,
+					-1,
 					creator);
 				if (entity.getPath().equals(object.getPath())) {
 					out.set(node);
@@ -223,6 +272,7 @@ public class FSEntityServiceImpl implements FSEntityService {
 				object.getDiskObjectPath(),
 				hidden,
 				object.getByteSize(),
+				-1,
 				creator);
 			repository.delete(object);
 			permissionService.deletePermissionsTreeFor(object);
@@ -239,6 +289,7 @@ public class FSEntityServiceImpl implements FSEntityService {
 					entity.getDiskObjectPath(),
 					entity.getHidden(),
 					entity.getByteSize(),
+					entity.getMaxSize(),
 					creator);
 				if (entity.getPath().equals(object.getPath())) {
 					out.set(node);
