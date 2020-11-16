@@ -38,7 +38,7 @@ public class PredicatesBuilder {
 			})
 			.filter(Objects::nonNull)
 			.collect(Collectors.toList());
-
+		if (predicates.size() != params.size()) return null;
 		BooleanExpression result = Expressions.asBoolean(true).isTrue();
 		for (BooleanExpression predicate : predicates) {
 			result = result.and(predicate);

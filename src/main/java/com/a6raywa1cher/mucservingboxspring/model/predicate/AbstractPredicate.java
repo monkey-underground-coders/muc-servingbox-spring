@@ -20,45 +20,23 @@ public abstract class AbstractPredicate {
 		return null;
 	}
 
-	;
-
-	public BooleanExpression getPredicate() {
-		PathBuilder<?> entityPath = getPathBuilder();
-		if (isNumeric(criteria.getValue().toString())) {
-			NumberPath<Integer> path = entityPath.getNumber(criteria.getKey(), Integer.class);
-			int value = Integer.parseInt(criteria.getValue().toString());
-			switch (criteria.getOperation()) {
-				case ":":
-					return path.eq(value);
-				case ">":
-					return path.goe(value);
-				case "<":
-					return path.loe(value);
-			}
-		} else if (criteria.getKey().startsWith("[") && criteria.getKey().endsWith("]")) {
-			String name = criteria.getKey().substring(0, criteria.getKey().length() - 1);
-			if (getPathBuilder().get(name) == null) return null;
-
-			ListPath<?, ? extends EntityPathBase<?>> path = bindList(name);
-			if (path == null) return null;
-
-			if (!isNumeric(criteria.getValue().toString())) return null;
-			int value = Integer.parseInt(criteria.getValue().toString());
-			switch (criteria.getOperation()) {
-				case ":":
-					return path.size().eq(value);
-				case ">":
-					return path.size().goe(value);
-				case "<":
-					return path.size().loe(value);
-			}
-		} else {
-			StringPath path = entityPath.getString(criteria.getKey());
-			if (criteria.getOperation().equalsIgnoreCase(":")) {
-				return path.containsIgnoreCase(criteria.getValue().toString());
-			}
+	public static <T extends Comparable<?>> BooleanExpression appendNumberOperation(ComparableExpression<T> path, String operation, T value) {
+		switch (operation) {
+			case "=":
+				return path.eq(value);
+			case "!=":
+				return path.ne(value);
+			case ">=":
+				return path.goe(value);
+			case "<=":
+				return path.loe(value);
+			case ">":
+				return path.gt(value);
+			case "<":
+				return path.lt(value);
+			default:
+				return null;
 		}
-		return null;
 	}
 
 	@SneakyThrows
@@ -74,5 +52,49 @@ public abstract class AbstractPredicate {
 				criteria.getOperation(),
 				criteria.getValue()
 			), target).getPredicate();
+	}
+
+	public static <T extends Number & Comparable<?>> BooleanExpression appendNumberOperation(NumberExpression<T> path, String operation, T value) {
+		switch (operation) {
+			case "=":
+				return path.eq(value);
+			case "!=":
+				return path.ne(value);
+			case ">=":
+				return path.goe(value);
+			case "<=":
+				return path.loe(value);
+			case ">":
+				return path.gt(value);
+			case "<":
+				return path.lt(value);
+			default:
+				return null;
+		}
+	}
+
+	public BooleanExpression getPredicate() {
+		PathBuilder<?> entityPath = getPathBuilder();
+		if (criteria.getKey().startsWith("[") && criteria.getKey().endsWith("]")) {
+			String name = criteria.getKey().substring(1, criteria.getKey().length() - 1);
+			if (getPathBuilder().get(name) == null) return null;
+
+			ListPath<?, ? extends EntityPathBase<?>> path = bindList(name);
+			if (path == null) return null;
+
+			if (!isNumeric(criteria.getValue().toString())) return null;
+			int value = Integer.parseInt(criteria.getValue().toString());
+			return appendNumberOperation(path.size(), criteria.getOperation(), value);
+		} else if (isNumeric(criteria.getValue().toString())) {
+			NumberPath<Integer> path = entityPath.getNumber(criteria.getKey(), Integer.class);
+			int value = Integer.parseInt(criteria.getValue().toString());
+			return appendNumberOperation(path, criteria.getOperation(), value);
+		} else {
+			StringPath path = entityPath.getString(criteria.getKey());
+			if ("=".equals(criteria.getOperation())) {
+				return path.containsIgnoreCase(criteria.getValue().toString());
+			}
+		}
+		return null;
 	}
 }

@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -95,6 +96,9 @@ public class FSEntityController {
 	@Operation(security = @SecurityRequirement(name = "jwt"))
 	@JsonView(Views.Public.class)
 	public ResponseEntity<Void> updateContent(@PathVariable long fid, @RequestParam("file") MultipartFile multipartFile) {
+		if (multipartFile.getSize() <= 0) {
+			throw new EmptyFileException();
+		}
 		Optional<FSEntity> optionalFSEntity = entityService.getById(fid);
 		if (optionalFSEntity.isEmpty()) {
 			return ResponseEntity.notFound().build();
@@ -103,7 +107,13 @@ public class FSEntityController {
 		if (file.isFolder()) {
 			throw new FileOperationOnFolderException();
 		}
-		entityService.modifyFile(file, multipartFile);
+		long delta = multipartFile.getSize() - file.getByteSize();
+		if (delta > 0 && entityService.calculateSpaceLeft(file.getParentPath()) - delta < 0) {
+			throw new ExceededMaximumSpaceCapacityException();
+		}
+		if (entityService.modifyFile(file, multipartFile) == null) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+		}
 		return ResponseEntity.ok().build();
 	}
 

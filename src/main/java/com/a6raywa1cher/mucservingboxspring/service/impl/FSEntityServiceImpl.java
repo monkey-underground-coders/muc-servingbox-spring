@@ -183,7 +183,7 @@ public class FSEntityServiceImpl implements FSEntityService {
 
 	@Override
 	public FSEntity modifyFile(FSEntity file, MultipartFile newContent) {
-		long size = diskService.modifyFile(Path.of(file.getPath()), newContent);
+		long size = diskService.modifyFile(Path.of(file.getDiskObjectPath()), newContent);
 		if (size == -1) {
 			return null;
 		}
