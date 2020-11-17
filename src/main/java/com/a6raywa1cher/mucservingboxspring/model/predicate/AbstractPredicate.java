@@ -1,7 +1,10 @@
 package com.a6raywa1cher.mucservingboxspring.model.predicate;
 
+import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.dsl.*;
 import lombok.SneakyThrows;
+
+import java.time.ZonedDateTime;
 
 import static org.apache.commons.lang3.StringUtils.isNumeric;
 
@@ -16,7 +19,7 @@ public abstract class AbstractPredicate {
 
 	protected abstract PathBuilder<?> getPathBuilder();
 
-	protected <T, J extends EntityPathBase<T>> ListPath<T, J> bindList(String variableName) {
+	protected Expression<?> bind(String variableName) {
 		return null;
 	}
 
@@ -75,11 +78,18 @@ public abstract class AbstractPredicate {
 
 	public BooleanExpression getPredicate() {
 		PathBuilder<?> entityPath = getPathBuilder();
-		if (criteria.getKey().startsWith("[") && criteria.getKey().endsWith("]")) {
+		if (bind(criteria.getKey()) != null) {
+			Expression<?> expression = bind(criteria.getKey());
+			if (expression instanceof NumberExpression) {
+				return appendNumberOperation((NumberExpression<Integer>) expression, criteria.getOperation(), Integer.parseInt((String) criteria.getValue()));
+			} else if (expression instanceof TemporalExpression) {
+				return appendNumberOperation((TemporalExpression<ZonedDateTime>) expression, criteria.getOperation(), ZonedDateTime.parse((String) criteria.getValue()));
+			}
+		} else if (criteria.getKey().startsWith("[") && criteria.getKey().endsWith("]")) {
 			String name = criteria.getKey().substring(1, criteria.getKey().length() - 1);
 			if (getPathBuilder().get(name) == null) return null;
 
-			ListPath<?, ? extends EntityPathBase<?>> path = bindList(name);
+			ListPath<?, ?> path = (ListPath<?, ?>) bind(name);
 			if (path == null) return null;
 
 			if (!isNumeric(criteria.getValue().toString())) return null;

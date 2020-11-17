@@ -25,6 +25,8 @@ public interface FSEntityPermissionService {
 
 	List<FSEntity> getAllChildrenWithAccess(FSEntity parent, User user, ActionType actionType);
 
+	List<FSEntity> getAllReadable(User user);
+
 	void delete(FSEntityPermission permission);
 
 	void delete(List<FSEntityPermission> list);

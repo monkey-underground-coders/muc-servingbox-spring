@@ -61,6 +61,13 @@ public class FSEntityPermissionController {
 		return ResponseEntity.ok(permissionService.getByFSEntity(optional.get()));
 	}
 
+	@GetMapping("/readable")
+	@Operation(security = @SecurityRequirement(name = "jwt"))
+	@JsonView(Views.Public.class)
+	public ResponseEntity<List<FSEntity>> getReadable(@Parameter(hidden = true) User user) {
+		return ResponseEntity.ok(permissionService.getAllReadable(user));
+	}
+
 	@PostMapping("/create")
 	@PreAuthorize("@mvcAccessChecker.checkEntityAccessById(#request.getEntityId(), 'perm')")
 	@Operation(security = @SecurityRequirement(name = "jwt"))

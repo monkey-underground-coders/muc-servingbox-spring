@@ -3,6 +3,9 @@ package com.a6raywa1cher.mucservingboxspring.service;
 import com.a6raywa1cher.mucservingboxspring.model.User;
 import com.a6raywa1cher.mucservingboxspring.model.UserRole;
 import com.a6raywa1cher.mucservingboxspring.model.file.FSEntity;
+import com.querydsl.core.types.dsl.BooleanExpression;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.time.ZonedDateTime;
 import java.util.Collection;
@@ -19,6 +22,8 @@ public interface UserService {
 	Stream<User> getById(Collection<Long> ids);
 
 	Optional<User> getByUsername(String username);
+
+	Page<User> getPage(BooleanExpression filter, Pageable pageable);
 
 	User editUser(User user, UserRole userRole, String username, String name);
 

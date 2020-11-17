@@ -8,4 +8,8 @@ public class FilterParsingSyntaxException extends RuntimeException {
 	public FilterParsingSyntaxException(Throwable cause) {
 		super(cause);
 	}
+
+	public FilterParsingSyntaxException() {
+		super();
+	}
 }

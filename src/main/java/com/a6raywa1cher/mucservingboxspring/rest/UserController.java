@@ -3,6 +3,7 @@ package com.a6raywa1cher.mucservingboxspring.rest;
 import com.a6raywa1cher.mucservingboxspring.model.User;
 import com.a6raywa1cher.mucservingboxspring.model.UserRole;
 import com.a6raywa1cher.mucservingboxspring.model.file.FSEntity;
+import com.a6raywa1cher.mucservingboxspring.model.predicate.impl.UserPredicate;
 import com.a6raywa1cher.mucservingboxspring.rest.exc.UnacceptableRequestTowardsTemporaryUserException;
 import com.a6raywa1cher.mucservingboxspring.rest.req.ChangeHomeSizeRequest;
 import com.a6raywa1cher.mucservingboxspring.rest.req.ChangeNameOfUserRequest;
@@ -13,11 +14,17 @@ import com.a6raywa1cher.mucservingboxspring.security.jwt.service.JwtRefreshPairS
 import com.a6raywa1cher.mucservingboxspring.service.FSEntityService;
 import com.a6raywa1cher.mucservingboxspring.service.UserService;
 import com.a6raywa1cher.mucservingboxspring.utils.LocalHtmlUtils;
+import com.a6raywa1cher.mucservingboxspring.utils.RestUtils;
 import com.a6raywa1cher.mucservingboxspring.utils.Views;
 import com.fasterxml.jackson.annotation.JsonView;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import org.springdoc.core.converters.models.PageableAsQueryParam;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -105,6 +112,17 @@ public class UserController {
 	@JsonView(Views.Internal.class)
 	public ResponseEntity<User> getByIdInternal(@PathVariable long uid) {
 		return userService.getById(uid).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+	}
+
+	@GetMapping("/page")
+	@Secured({"ROLE_ADMIN"})
+	@Operation(security = @SecurityRequirement(name = "jwt"))
+	@JsonView(Views.Internal.class)
+	@PageableAsQueryParam
+	public ResponseEntity<Page<User>> getPage(@RequestParam(required = false) String filter,
+											  @Parameter(hidden = true) Pageable pageable) {
+		BooleanExpression booleanExpression = RestUtils.decodeFilter(filter, UserPredicate.class);
+		return ResponseEntity.ok(userService.getPage(booleanExpression, pageable));
 	}
 
 	@PutMapping("/{uid:[0-9]+}/edit_name")

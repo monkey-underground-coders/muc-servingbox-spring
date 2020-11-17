@@ -22,4 +22,7 @@ public interface FSEntityPermissionRepository extends CrudRepository<FSEntityPer
 	List<FSEntityPermission> getAllByPath(@Param("path") String path);
 
 	List<FSEntityPermission> getByEntity(FSEntity fsEntity);
+
+	@Query("from FSEntityPermission p left join p.affectedUserRoles r left join p.affectedUsers u where (u.id = :userId or r = :userRole) and p.mask in :allMasks and p.entity is not null")
+	List<FSEntityPermission> getByUserByMasks(@Param("userRole") UserRole userRole, @Param("userId") long userId, @Param("allMasks") List<Integer> allMasks);
 }
