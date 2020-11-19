@@ -2,7 +2,6 @@ package com.a6raywa1cher.mucservingboxspring.utils;
 
 import com.a6raywa1cher.mucservingboxspring.model.predicate.AbstractPredicate;
 import com.a6raywa1cher.mucservingboxspring.model.predicate.PredicatesBuilder;
-import com.a6raywa1cher.mucservingboxspring.rest.exc.FilterParsingLexicalException;
 import com.a6raywa1cher.mucservingboxspring.rest.exc.FilterParsingSyntaxException;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
@@ -29,7 +28,7 @@ public class RestUtils {
 			throw new FilterParsingSyntaxException(e);
 		}
 		if (build == null) {
-			throw new FilterParsingLexicalException();
+			throw new FilterParsingSyntaxException();
 		}
 		return build;
 	}

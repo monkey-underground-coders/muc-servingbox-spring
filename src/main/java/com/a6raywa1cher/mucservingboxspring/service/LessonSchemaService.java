@@ -23,5 +23,7 @@ public interface LessonSchemaService {
 
 	LessonSchema cloneSchema(LessonSchema lessonSchema, User user);
 
+	LessonSchema transferToNotOnFly(LessonSchema lessonSchema);
+
 	void deleteSchema(LessonSchema lessonSchema);
 }

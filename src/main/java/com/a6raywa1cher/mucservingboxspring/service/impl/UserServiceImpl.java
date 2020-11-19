@@ -5,9 +5,12 @@ import com.a6raywa1cher.mucservingboxspring.model.UserRole;
 import com.a6raywa1cher.mucservingboxspring.model.file.FSEntity;
 import com.a6raywa1cher.mucservingboxspring.model.repo.UserRepository;
 import com.a6raywa1cher.mucservingboxspring.service.UserService;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -86,6 +89,11 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public Optional<User> getByUsername(String username) {
 		return repository.findByUsername(username);
+	}
+
+	@Override
+	public Page<User> getPage(BooleanExpression filter, Pageable pageable) {
+		return repository.findAll(filter, pageable);
 	}
 
 	@Override

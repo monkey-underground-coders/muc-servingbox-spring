@@ -18,13 +18,13 @@ import java.util.stream.Stream;
 @Entity
 @Data
 @Table(indexes = {
-	@Index(columnList = "mask")
+		@Index(columnList = "mask")
 })
 @AllArgsConstructor
 @Builder
 public class FSEntityPermission {
 
-	@ManyToOne(optional = false)
+	@ManyToOne(optional = false, fetch = FetchType.EAGER)
 	@JsonView(Views.Public.class)
 	private FSEntity entity;
 

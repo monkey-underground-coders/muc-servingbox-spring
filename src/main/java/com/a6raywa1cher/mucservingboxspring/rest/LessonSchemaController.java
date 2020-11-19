@@ -3,6 +3,7 @@ package com.a6raywa1cher.mucservingboxspring.rest;
 import com.a6raywa1cher.mucservingboxspring.model.User;
 import com.a6raywa1cher.mucservingboxspring.model.lesson.LessonSchema;
 import com.a6raywa1cher.mucservingboxspring.model.predicate.impl.LessonSchemaPredicate;
+import com.a6raywa1cher.mucservingboxspring.rest.exc.TransferOfNonOnFlyException;
 import com.a6raywa1cher.mucservingboxspring.rest.req.CreateLessonSchemaRequest;
 import com.a6raywa1cher.mucservingboxspring.rest.req.EditLessonSchemaRequest;
 import com.a6raywa1cher.mucservingboxspring.service.LessonSchemaService;
@@ -93,6 +94,22 @@ public class LessonSchemaController {
 			LocalHtmlUtils.htmlEscape(request.getTitle(), 255),
 			LocalHtmlUtils.htmlEscape(request.getDescription())
 		));
+	}
+
+	@PostMapping("/{lid:[0-9]+}/transfer")
+	@PreAuthorize("@mvcAccessChecker.checkSchemaWriteAccess(#lid)")
+	@Operation(security = @SecurityRequirement(name = "jwt"))
+	@JsonView(Views.Detailed.class)
+	public ResponseEntity<LessonSchema> transfer(@PathVariable long lid) {
+		Optional<LessonSchema> byId = schemaService.getById(lid);
+		if (byId.isEmpty()) {
+			return ResponseEntity.notFound().build();
+		}
+		LessonSchema lessonSchema = byId.get();
+		if (!lessonSchema.isOnTheFly()) {
+			throw new TransferOfNonOnFlyException();
+		}
+		return ResponseEntity.ok(schemaService.transferToNotOnFly(lessonSchema));
 	}
 
 	@DeleteMapping("/{lid:[0-9]+}")

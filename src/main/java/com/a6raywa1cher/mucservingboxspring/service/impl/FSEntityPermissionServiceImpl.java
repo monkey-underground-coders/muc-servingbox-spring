@@ -8,12 +8,11 @@ import com.a6raywa1cher.mucservingboxspring.model.file.FSEntityPermission;
 import com.a6raywa1cher.mucservingboxspring.model.repo.FSEntityPermissionRepository;
 import com.a6raywa1cher.mucservingboxspring.model.repo.FSEntityRepository;
 import com.a6raywa1cher.mucservingboxspring.service.FSEntityPermissionService;
+import com.a6raywa1cher.mucservingboxspring.utils.AlgorithmUtils;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -78,6 +77,71 @@ public class FSEntityPermissionServiceImpl implements FSEntityPermissionService 
 	public List<FSEntity> getAllChildrenWithAccess(FSEntity parent, User user, ActionType actionType) {
 		List<FSEntity> treeByPath = entityRepository.getTreeByPath(parent.getPath());
 		return treeByPath.stream().filter(e -> !parent.getId().equals(e.getId())).collect(Collectors.toList());
+	}
+
+	private List<String> getAllPath(String s) {
+		List<Integer> slashes = AlgorithmUtils.getSlashes(s);
+		List<String> out = new ArrayList<>(slashes.size());
+		out.add("/");
+		for (int i = 0; i < slashes.size(); i++) {
+			String node;
+			if (i + 1 == slashes.size()) {
+				node = s;
+			} else {
+				int right = slashes.get(i + 1);
+				node = s.substring(0, right + 1);
+			}
+			if (node.equals("")) continue;
+			out.add(node);
+		}
+		return out;
+	}
+
+	@Override
+	public List<FSEntity> getAllReadable(User user) {
+		List<FSEntity> entities =
+			repository.getByUserByMasks(user.getUserRole(), user.getId(), ActionType.READ.allMasks)
+				.stream()
+				.map(FSEntityPermission::getEntity)
+				.filter(Objects::nonNull)
+				.collect(Collectors.toList());
+		Map<String, FSEntity> pathToEntity = entities.stream()
+			.collect(Collectors.toMap(FSEntity::getPath, Function.identity()));
+		Map<String, Set<String>> graph = new HashMap<>();
+		for (FSEntity e : entities) {
+			List<String> allPath = getAllPath(e.getPath());
+			for (int i = 1; i < allPath.size(); i++) {
+				String n1 = allPath.get(i - 1);
+				String n2 = allPath.get(i);
+				if (!graph.containsKey(n1)) {
+					graph.put(n1, new HashSet<>());
+				}
+				graph.get(n1).add(n2);
+			}
+			String lastNode = allPath.get(allPath.size() - 1);
+			graph.putIfAbsent(lastNode, new HashSet<>());
+		}
+
+		List<FSEntity> out = new ArrayList<>();
+		Queue<String> queue = new ArrayDeque<>();
+		Set<String> visited = new HashSet<>();
+		queue.add("/");
+		visited.add("/");
+		while (queue.size() > 0) {
+			String node = queue.poll();
+			FSEntity entity;
+			if ((entity = pathToEntity.getOrDefault(node, null)) != null) {
+				out.add(entity);
+				continue;
+			}
+			for (String child : graph.get(node)) {
+				if (!visited.contains(child)) {
+					queue.add(child);
+					visited.add(child);
+				}
+			}
+		}
+		return out;
 	}
 
 	@Override

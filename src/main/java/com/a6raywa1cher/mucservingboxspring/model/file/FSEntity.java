@@ -1,6 +1,7 @@
 package com.a6raywa1cher.mucservingboxspring.model.file;
 
 import com.a6raywa1cher.mucservingboxspring.model.User;
+import com.a6raywa1cher.mucservingboxspring.utils.AlgorithmUtils;
 import com.a6raywa1cher.mucservingboxspring.utils.Views;
 import com.fasterxml.jackson.annotation.*;
 import lombok.AllArgsConstructor;
@@ -12,8 +13,6 @@ import org.springframework.util.Assert;
 import javax.persistence.*;
 import java.time.ZonedDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 @Entity
 @Data
@@ -86,10 +85,7 @@ public class FSEntity {
 		if (path == null) {
 			return null;
 		}
-		List<Integer> slashPositions = IntStream.range(0, path.length())
-			.filter(i -> path.charAt(i) == '/')
-			.boxed()
-			.collect(Collectors.toList());
+		List<Integer> slashPositions = AlgorithmUtils.getSlashes(path);
 		int slashes = slashPositions.size();
 		return path.endsWith("/") ?
 			path.substring(slashPositions.get(slashes - 2) + 1, path.length() - 1) :
@@ -100,10 +96,7 @@ public class FSEntity {
 	public String getParentPath() {
 		if (path == null) return null;
 		if (path.equals("/")) return null;
-		List<Integer> slashes = IntStream.range(0, path.length())
-			.filter(i -> path.charAt(i) == '/')
-			.boxed()
-			.collect(Collectors.toList());
+		List<Integer> slashes = AlgorithmUtils.getSlashes(path);
 		int size = slashes.size();
 		if (isFolder) {
 			if (size < 3) return null;

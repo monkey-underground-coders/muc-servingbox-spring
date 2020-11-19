@@ -86,6 +86,12 @@ public class LessonSchemaServiceImpl implements LessonSchemaService {
 	}
 
 	@Override
+	public LessonSchema transferToNotOnFly(LessonSchema lessonSchema) {
+		lessonSchema.setOnTheFly(false);
+		return repository.save(lessonSchema);
+	}
+
+	@Override
 	public void deleteSchema(LessonSchema lessonSchema) {
 		repository.delete(lessonSchema);
 	}
