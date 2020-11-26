@@ -1,6 +1,6 @@
 package com.a6raywa1cher.mucservingboxspring.utils;
 
-public class Views {
+public abstract class Views {
 	public static class Public {
 	}
 
@@ -9,6 +9,7 @@ public class Views {
 	}
 
 	public static class Internal extends Public {
+
 	}
 
 	public static class DetailedInternal extends Internal {

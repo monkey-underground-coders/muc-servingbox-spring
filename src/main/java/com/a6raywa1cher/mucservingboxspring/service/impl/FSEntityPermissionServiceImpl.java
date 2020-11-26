@@ -74,9 +74,28 @@ public class FSEntityPermissionServiceImpl implements FSEntityPermissionService 
 	}
 
 	@Override
+	public Map<ActionType, Boolean> probe(FSEntity entity, User user) {
+		List<FSEntityPermission> permissions =
+			repository.getAllApplicableToEntity(getUpperLevels(entity.getPath()), user.getId(), user.getUserRole());
+		Map<ActionType, Boolean> out = permissions.stream()
+			.flatMap(p -> p.getActionTypes().stream())
+			.distinct()
+			.collect(Collectors.toMap(Function.identity(), a -> true));
+		out.putIfAbsent(ActionType.READ, false);
+		out.putIfAbsent(ActionType.WRITE, false);
+		out.putIfAbsent(ActionType.MANAGE_PERMISSIONS, false);
+		return out;
+	}
+
+	@Override
 	public List<FSEntity> getAllChildrenWithAccess(FSEntity parent, User user, ActionType actionType) {
 		List<FSEntity> treeByPath = entityRepository.getTreeByPath(parent.getPath());
 		return treeByPath.stream().filter(e -> !parent.getId().equals(e.getId())).collect(Collectors.toList());
+	}
+
+	@Override
+	public List<FSEntity> getAllDescendantsWithAccess(FSEntity entity, User user, ActionType actionType) {
+		return entityRepository.getFirstLevelByPath(entity.getPath(), entity.getPathLevel() + 1);
 	}
 
 	private List<String> getAllPath(String s) {

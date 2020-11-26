@@ -17,6 +17,9 @@ public interface FSEntityRepository extends CrudRepository<FSEntity, Long> {
 	@Query("from FSEntity e where e.path like concat(:path, '%')")
 	List<FSEntity> getTreeByPath(@Param("path") String path);
 
+	@Query("from FSEntity e where e.path like concat(:path, '%') and e.pathLevel = :level")
+	List<FSEntity> getFirstLevelByPath(@Param("path") String path, @Param("level") int level);
+
 	@Query("from FSEntity e where e.path like concat(:path, '%') and e.isFolder = false")
 	List<FSEntity> getFilesTreeByPath(@Param("path") String path);
 

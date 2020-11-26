@@ -3,7 +3,7 @@ package com.a6raywa1cher.mucservingboxspring.utils;
 import com.a6raywa1cher.mucservingboxspring.rest.exc.TooLongStringException;
 import org.springframework.web.util.HtmlUtils;
 
-public class LocalHtmlUtils {
+public abstract class LocalHtmlUtils {
 	public static String htmlEscape(String input) {
 		return input == null ? null : HtmlUtils.htmlEscape(input);
 	}

@@ -9,6 +9,7 @@ import com.a6raywa1cher.mucservingboxspring.model.repo.FSEntityRepository;
 import com.a6raywa1cher.mucservingboxspring.service.DiskService;
 import com.a6raywa1cher.mucservingboxspring.service.FSEntityPermissionService;
 import com.a6raywa1cher.mucservingboxspring.service.FSEntityService;
+import com.a6raywa1cher.mucservingboxspring.utils.AlgorithmUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.data.util.Pair;
@@ -52,6 +53,8 @@ public class FSEntityServiceImpl implements FSEntityService {
 									  boolean hidden, long byteSize, long maxSize, User creator) {
 		FSEntity fsEntity = new FSEntity();
 		fsEntity.setPath(virtualPath);
+		int sepsCount = (int) AlgorithmUtils.count(virtualPath, '/');
+		fsEntity.setPathLevel(isFolder ? sepsCount : sepsCount + 1);
 		fsEntity.setIsFolder(isFolder);
 		fsEntity.setDiskObjectPath(diskObjectPath);
 		fsEntity.setHidden(hidden);

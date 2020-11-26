@@ -18,6 +18,12 @@ public interface FSEntityPermissionRepository extends CrudRepository<FSEntityPer
 	boolean checkAccess(@Param("paths") List<String> paths, @Param("userId") long userId,
 						@Param("userRole") UserRole userRole, @Param("allMasks") List<Integer> allMasks);
 
+	@Query("select p \n" +
+		"from FSEntityPermission p left join p.affectedUserRoles r left join p.affectedUsers u\n" +
+		"where (u.id = :userId or r = :userRole) and p.entity is not null and p.entity.path in :paths")
+	List<FSEntityPermission> getAllApplicableToEntity(@Param("paths") List<String> paths, @Param("userId") long userId,
+													  @Param("userRole") UserRole userRole);
+
 	@Query("select p from FSEntityPermission p, FSEntity e where e.path like concat(:path, '%')")
 	List<FSEntityPermission> getAllByPath(@Param("path") String path);
 

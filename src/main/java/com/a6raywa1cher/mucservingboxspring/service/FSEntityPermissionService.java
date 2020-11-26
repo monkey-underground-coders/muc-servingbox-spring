@@ -7,6 +7,7 @@ import com.a6raywa1cher.mucservingboxspring.model.file.FSEntity;
 import com.a6raywa1cher.mucservingboxspring.model.file.FSEntityPermission;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public interface FSEntityPermissionService {
@@ -23,7 +24,11 @@ public interface FSEntityPermissionService {
 
 	boolean check(FSEntity fsEntity, ActionType type, User user);
 
+	Map<ActionType, Boolean> probe(FSEntity entity, User user);
+
 	List<FSEntity> getAllChildrenWithAccess(FSEntity parent, User user, ActionType actionType);
+
+	List<FSEntity> getAllDescendantsWithAccess(FSEntity entity, User user, ActionType actionType);
 
 	List<FSEntity> getAllReadable(User user);
 
@@ -32,4 +37,5 @@ public interface FSEntityPermissionService {
 	void delete(List<FSEntityPermission> list);
 
 	void deletePermissionsTreeFor(FSEntity parent);
+
 }
