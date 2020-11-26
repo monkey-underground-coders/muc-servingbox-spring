@@ -257,7 +257,7 @@ public class MvcAccessCheckerUnitTests {
 		when(notAdminUser.getUserRole()).thenReturn(UserRole.TEMPORARY_USER);
 		when(liveLesson.getCreator()).thenReturn(anotherUser);
 
-		assertFalse(checker.checkSchemaReadAccess(1L, notAdminUser));
+		assertFalse(checker.checkSchemaReadAccess(2L, notAdminUser));
 	}
 
 	@Test
@@ -293,6 +293,90 @@ public class MvcAccessCheckerUnitTests {
 		when(requester.getUserRole()).thenReturn(UserRole.TEMPORARY_USER);
 
 		assertFalse(checker.checkUserInternalInfoAccess(1L, requester));
+	}
+
+	@Test
+	public void checkUserPasswordChangeAccessUserIsTemporaryUser() {
+		MvcAccessChecker checker = new MvcAccessChecker(fsEntityService, permissionService, resolver, schemaService, liveLessonService, userService);
+
+		Optional<User> optionalUser = Optional.of(mock(User.class));
+		User requester = optionalUser.get();
+
+		when(userService.getById(1L)).thenReturn(optionalUser);
+		when(requester.getId()).thenReturn(1L);
+		when(requester.getUserRole()).thenReturn(UserRole.TEMPORARY_USER);
+
+		assertFalse(checker.checkUserPasswordChangeAccess(1L, requester));
+	}
+
+	@Test
+	public void checkUserPasswordChangeAccessUserIsStudentAndHasEqualsID() {
+		MvcAccessChecker checker = new MvcAccessChecker(fsEntityService, permissionService, resolver, schemaService, liveLessonService, userService);
+
+		Optional<User> optionalUser = Optional.of(mock(User.class));
+		User requester = optionalUser.get();
+
+		when(userService.getById(1L)).thenReturn(optionalUser);
+		when(requester.getId()).thenReturn(1L);
+		when(requester.getUserRole()).thenReturn(UserRole.STUDENT);
+
+		assertTrue(checker.checkUserPasswordChangeAccess(1L, requester));
+	}
+
+	@Test
+	public void checkUserPasswordChangeAccessUserIsStudentAndDoesntHaveEqualsID() {
+		MvcAccessChecker checker = new MvcAccessChecker(fsEntityService, permissionService, resolver, schemaService, liveLessonService, userService);
+
+		Optional<User> optionalUser = Optional.of(mock(User.class));
+		User requester = optionalUser.get();
+
+		when(userService.getById(1L)).thenReturn(optionalUser);
+		when(requester.getId()).thenReturn(1L);
+		when(requester.getUserRole()).thenReturn(UserRole.STUDENT);
+
+		assertFalse(checker.checkUserPasswordChangeAccess(2L, requester));
+	}
+
+	@Test
+	public void checkUserPasswordChangeAccessUserIsTeacherAndHasEqualsID() {
+		MvcAccessChecker checker = new MvcAccessChecker(fsEntityService, permissionService, resolver, schemaService, liveLessonService, userService);
+
+		Optional<User> optionalUser = Optional.of(mock(User.class));
+		User requester = optionalUser.get();
+
+		when(userService.getById(1L)).thenReturn(optionalUser);
+		when(requester.getId()).thenReturn(1L);
+		when(requester.getUserRole()).thenReturn(UserRole.TEACHER);
+
+		assertTrue(checker.checkUserPasswordChangeAccess(1L, requester));
+	}
+
+	@Test
+	public void checkUserPasswordChangeAccessUserIsTeacherAndDoesntHaveEqualsID() {
+		MvcAccessChecker checker = new MvcAccessChecker(fsEntityService, permissionService, resolver, schemaService, liveLessonService, userService);
+
+		Optional<User> optionalUser = Optional.of(mock(User.class));
+		User requester = optionalUser.get();
+
+		when(userService.getById(1L)).thenReturn(optionalUser);
+		when(requester.getId()).thenReturn(1L);
+		when(requester.getUserRole()).thenReturn(UserRole.TEACHER);
+
+		assertFalse(checker.checkUserPasswordChangeAccess(2L, requester));
+	}
+
+	@Test
+	public void checkUserPasswordChangeAccessUserIsAdmin() {
+		MvcAccessChecker checker = new MvcAccessChecker(fsEntityService, permissionService, resolver, schemaService, liveLessonService, userService);
+
+		Optional<User> optionalUser = Optional.of(mock(User.class));
+		User requester = optionalUser.get();
+
+		when(userService.getById(1L)).thenReturn(optionalUser);
+		when(requester.getId()).thenReturn(1L);
+		when(requester.getUserRole()).thenReturn(UserRole.ADMIN);
+
+		assertTrue(checker.checkUserPasswordChangeAccess(2L, requester));
 	}
 }
 
