@@ -14,9 +14,9 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.Optional;
+import java.util.function.Function;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -35,6 +35,36 @@ public class MvcAccessCheckerUnitTests {
 	@Mock
 	private UserService userService;
 
+
+	private void setPermissions(User user, FSEntity targetFolder, Boolean read, Boolean write, Boolean permissionAccess){
+		when(permissionService.check(targetFolder, ActionType.READ, user)).thenReturn(read);
+		when(permissionService.check(targetFolder, ActionType.WRITE, user)).thenReturn(write);
+		when(permissionService.check(targetFolder, ActionType.MANAGE_PERMISSIONS, user)).thenReturn(permissionAccess);
+	}
+
+	private void checkPermissions(Function<ActionType, Boolean> function, Boolean read, Boolean write, Boolean permissionAccess){
+		assertEquals(function.apply(ActionType.READ), read);
+		assertEquals(function.apply(ActionType.WRITE), write);
+		assertEquals(function.apply(ActionType.MANAGE_PERMISSIONS), permissionAccess);
+	}
+
+	@Test
+	public void checkLowerAccessById() {
+		MvcAccessChecker checker = new MvcAccessChecker(fsEntityService, permissionService, resolver, schemaService, liveLessonService, userService);
+
+		FSEntity targetFolder = FSEntity.createFolder("/f1/snake/", mock(User.class), false, 100L);
+		FSEntity parentFolder = FSEntity.createFolder("/f1/", mock(User.class), false, 100L);
+		User user = mock(User.class, "user");
+
+		when(fsEntityService.getById(14L)).thenReturn(Optional.of(targetFolder));
+		when(fsEntityService.getById(15L)).thenReturn(Optional.of(parentFolder));
+		setPermissions(user, targetFolder, true, false, false);
+		setPermissions(user, parentFolder, true, true, false);
+
+		checkPermissions((actionType) -> checker.checkLowerAccessById(14L, actionType, user), true, false, false);
+		checkPermissions((actionType) -> checker.checkLowerAccessById(15L, actionType, user), true, true, false);
+	}
+
 	@Test
 	public void checkFileAccessPath() {
 		MvcAccessChecker checker = new MvcAccessChecker(fsEntityService, permissionService, resolver, schemaService, liveLessonService, userService);
@@ -45,20 +75,11 @@ public class MvcAccessCheckerUnitTests {
 		User user2 = mock(User.class, "user2");
 
 		when(fsEntityService.getById(14L)).thenReturn(Optional.of(targetFile));
-		when(permissionService.check(targetFile, ActionType.READ, user1)).thenReturn(true);
-		when(permissionService.check(targetFile, ActionType.WRITE, user1)).thenReturn(false);
-		when(permissionService.check(targetFile, ActionType.MANAGE_PERMISSIONS, user1)).thenReturn(false);
-		when(permissionService.check(targetFile, ActionType.READ, user2)).thenReturn(false);
-		when(permissionService.check(targetFile, ActionType.WRITE, user2)).thenReturn(true);
-		when(permissionService.check(targetFile, ActionType.MANAGE_PERMISSIONS, user2)).thenReturn(false);
+		setPermissions(user1, targetFile, true, false, false);
+		setPermissions(user2, targetFile, false, true, false);
 
-		assertTrue(checker.checkEntityAccessById(14L, ActionType.READ, user1));
-		assertFalse(checker.checkEntityAccessById(14L, ActionType.WRITE, user1));
-		assertFalse(checker.checkEntityAccessById(14L, ActionType.MANAGE_PERMISSIONS, user1));
-
-		assertFalse(checker.checkEntityAccessById(14L, ActionType.READ, user2));
-		assertTrue(checker.checkEntityAccessById(14L, ActionType.WRITE, user2));
-		assertFalse(checker.checkEntityAccessById(14L, ActionType.MANAGE_PERMISSIONS, user2));
+		checkPermissions((actionType) -> checker.checkEntityAccessById(14L, actionType, user1), true, false, false);
+		checkPermissions((actionType) -> checker.checkEntityAccessById(14L, actionType, user2), false, true, false);
 	}
 
 	@Test
@@ -72,23 +93,11 @@ public class MvcAccessCheckerUnitTests {
 		when(fsEntityService.getById(14L)).thenReturn(Optional.of(targetFolder));
 		when(fsEntityService.getById(15L)).thenReturn(Optional.of(parentFolder));
 		when(fsEntityService.getParent(targetFolder)).thenReturn(Optional.of(parentFolder));
-		when(permissionService.check(targetFolder, ActionType.READ, user)).thenReturn(true);
-		when(permissionService.check(targetFolder, ActionType.WRITE, user)).thenReturn(true);
-		when(permissionService.check(targetFolder, ActionType.MANAGE_PERMISSIONS, user)).thenReturn(true);
-		when(permissionService.check(parentFolder, ActionType.READ, user)).thenReturn(true);
-		when(permissionService.check(parentFolder, ActionType.WRITE, user)).thenReturn(false);
-		when(permissionService.check(parentFolder, ActionType.MANAGE_PERMISSIONS, user)).thenReturn(true);
+		setPermissions(user, targetFolder, true, true, true);
+		setPermissions(user, parentFolder, true, false, true);
 
-		assertTrue(checker.checkEntityAccessById(14L, ActionType.READ, user));
-		assertFalse(checker.checkEntityAccessById(14L, ActionType.WRITE, user));
-		assertTrue(checker.checkEntityAccessById(14L, ActionType.MANAGE_PERMISSIONS, user));
-		assertTrue(checker.checkEntityAccessById(15L, ActionType.READ, user));
-		assertFalse(checker.checkEntityAccessById(15L, ActionType.WRITE, user));
-		assertFalse(checker.checkEntityAccessById(15L, ActionType.MANAGE_PERMISSIONS, user));
-
-		assertTrue(checker.checkLowerAccessById(14L, ActionType.READ, user));
-		assertTrue(checker.checkLowerAccessById(14L, ActionType.WRITE, user));
-		assertTrue(checker.checkLowerAccessById(14L, ActionType.MANAGE_PERMISSIONS, user));
+		checkPermissions((actionType) -> checker.checkEntityAccessById(14L, actionType, user), true, false, true);
+		checkPermissions((actionType) -> checker.checkEntityAccessById(15L, actionType, user), true, false, false);
 	}
 
 	@Test
@@ -109,3 +118,5 @@ public class MvcAccessCheckerUnitTests {
 		assertTrue(checker.checkPermissionAccess(16L, user));
 	}
 }
+
+
