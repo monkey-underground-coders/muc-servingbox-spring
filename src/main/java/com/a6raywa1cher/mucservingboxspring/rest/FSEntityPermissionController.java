@@ -1,6 +1,7 @@
 package com.a6raywa1cher.mucservingboxspring.rest;
 
 import com.a6raywa1cher.mucservingboxspring.model.User;
+import com.a6raywa1cher.mucservingboxspring.model.UserRole;
 import com.a6raywa1cher.mucservingboxspring.model.file.ActionType;
 import com.a6raywa1cher.mucservingboxspring.model.file.FSEntity;
 import com.a6raywa1cher.mucservingboxspring.model.file.FSEntityPermission;
@@ -8,6 +9,7 @@ import com.a6raywa1cher.mucservingboxspring.rest.exc.ApplicationDefinedPermissio
 import com.a6raywa1cher.mucservingboxspring.rest.exc.ExpectingAnySubjectException;
 import com.a6raywa1cher.mucservingboxspring.rest.req.CreatePermissionRequest;
 import com.a6raywa1cher.mucservingboxspring.rest.req.EditPermissionRequest;
+import com.a6raywa1cher.mucservingboxspring.rest.res.ProbeResponse;
 import com.a6raywa1cher.mucservingboxspring.service.FSEntityPermissionService;
 import com.a6raywa1cher.mucservingboxspring.service.FSEntityService;
 import com.a6raywa1cher.mucservingboxspring.service.UserService;
@@ -24,6 +26,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -121,7 +124,7 @@ public class FSEntityPermissionController {
 		);
 	}
 
-	@GetMapping("/entity/{fid:[0-9]+}/descendants/")
+	@GetMapping("/entity/{fid:[0-9]+}/descendants")
 	@PreAuthorize("@mvcAccessChecker.checkLowerAccessById(#fid, 'read')")
 	@Operation(security = @SecurityRequirement(name = "jwt"))
 	@JsonView(Views.Public.class)
@@ -132,6 +135,28 @@ public class FSEntityPermissionController {
 		}
 		return ResponseEntity.ok(
 			permissionService.getAllDescendantsWithAccess(optional.get(), user, ActionType.READ)
+		);
+	}
+
+	@GetMapping("/entity/{fid:[0-9]+}/probe")
+	@Operation(security = @SecurityRequirement(name = "jwt"))
+	@JsonView(Views.Public.class)
+	public ResponseEntity<ProbeResponse> probeEntity(@PathVariable long fid, @Parameter(hidden = true) User user) {
+		Optional<FSEntity> optional = entityService.getById(fid);
+		if (optional.isEmpty()) {
+			return ResponseEntity.notFound().build();
+		}
+		if (user.getUserRole() == UserRole.ADMIN) {
+			return ResponseEntity.ok(new ProbeResponse(true, true, true));
+		}
+		FSEntity entity = optional.get();
+		Map<ActionType, Boolean> probe = permissionService.probe(entity, user);
+		return ResponseEntity.ok(
+			new ProbeResponse(
+				probe.get(ActionType.READ),
+				probe.get(ActionType.WRITE),
+				probe.get(ActionType.MANAGE_PERMISSIONS)
+			)
 		);
 	}
 
