@@ -2,9 +2,13 @@ package com.a6raywa1cher.mucservingboxspring.unit;
 
 
 import com.a6raywa1cher.mucservingboxspring.model.User;
+import com.a6raywa1cher.mucservingboxspring.model.UserRole;
 import com.a6raywa1cher.mucservingboxspring.model.file.ActionType;
 import com.a6raywa1cher.mucservingboxspring.model.file.FSEntity;
 import com.a6raywa1cher.mucservingboxspring.model.file.FSEntityPermission;
+import com.a6raywa1cher.mucservingboxspring.model.lesson.LessonSchema;
+import com.a6raywa1cher.mucservingboxspring.model.lesson.LiveLesson;
+import com.a6raywa1cher.mucservingboxspring.model.lesson.LiveLessonStatus;
 import com.a6raywa1cher.mucservingboxspring.security.MvcAccessChecker;
 import com.a6raywa1cher.mucservingboxspring.service.*;
 import com.a6raywa1cher.mucservingboxspring.utils.AuthenticationResolver;
@@ -13,6 +17,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -36,13 +41,13 @@ public class MvcAccessCheckerUnitTests {
 	private UserService userService;
 
 
-	private void setPermissions(User user, FSEntity targetFolder, Boolean read, Boolean write, Boolean permissionAccess){
+	private void setPermissions(User user, FSEntity targetFolder, boolean read, boolean write, boolean permissionAccess){
 		when(permissionService.check(targetFolder, ActionType.READ, user)).thenReturn(read);
 		when(permissionService.check(targetFolder, ActionType.WRITE, user)).thenReturn(write);
 		when(permissionService.check(targetFolder, ActionType.MANAGE_PERMISSIONS, user)).thenReturn(permissionAccess);
 	}
 
-	private void checkPermissions(Function<ActionType, Boolean> function, Boolean read, Boolean write, Boolean permissionAccess){
+	private void checkPermissions(Function<ActionType, Boolean> function, boolean read, boolean write, boolean permissionAccess){
 		assertEquals(function.apply(ActionType.READ), read);
 		assertEquals(function.apply(ActionType.WRITE), write);
 		assertEquals(function.apply(ActionType.MANAGE_PERMISSIONS), permissionAccess);
@@ -116,6 +121,53 @@ public class MvcAccessCheckerUnitTests {
 		when(permissionService.getById(16L)).thenReturn(Optional.of(fsEntityPermission));
 
 		assertTrue(checker.checkPermissionAccess(16L, user));
+	}
+
+	@Test
+	public void checkSchemaReadAccess() {
+		MvcAccessChecker checker = new MvcAccessChecker(fsEntityService, permissionService, resolver, schemaService, liveLessonService, userService);
+
+		Optional<LessonSchema> optionalLessonSchema = Optional.of(LessonSchema.builder().build());
+		User adminUser = mock(User.class, "admin");
+
+		when(schemaService.getById(1L)).thenReturn(optionalLessonSchema);
+		when(adminUser.getUserRole()).thenReturn(UserRole.ADMIN);
+
+		assertTrue(checker.checkSchemaReadAccess(1L, adminUser));
+	}
+
+	@Test
+	public void checkSchemaReadAccessNotAdmin() {
+		MvcAccessChecker checker = new MvcAccessChecker(fsEntityService, permissionService, resolver, schemaService, liveLessonService, userService);
+
+		LiveLesson liveLesson = mock(LiveLesson.class);
+		LessonSchema lessonSchema = LessonSchema.builder()
+			.liveLessons(List.of(liveLesson)).build();
+		Optional<LessonSchema> optionalLessonSchema = Optional.of(lessonSchema);
+		User notAdminUser = mock(User.class, "notAdmin");
+
+		when(schemaService.getById(1L)).thenReturn(optionalLessonSchema);
+		when(notAdminUser.getUserRole()).thenReturn(UserRole.TEMPORARY_USER);
+		when(liveLesson.getStatus()).thenReturn(LiveLessonStatus.LIVE);
+
+		assertTrue(checker.checkSchemaReadAccess(1L, notAdminUser));
+	}
+
+	@Test
+	public void checkSchemaReadAccessNotAdminNotTrue() {
+		MvcAccessChecker checker = new MvcAccessChecker(fsEntityService, permissionService, resolver, schemaService, liveLessonService, userService);
+
+		LiveLesson liveLesson = mock(LiveLesson.class);
+		LessonSchema lessonSchema = LessonSchema.builder()
+			.liveLessons(List.of(liveLesson)).build();
+		Optional<LessonSchema> optionalLessonSchema = Optional.of(lessonSchema);
+		User notAdminUser = mock(User.class, "notAdmin");
+
+		when(schemaService.getById(1L)).thenReturn(optionalLessonSchema);
+		when(notAdminUser.getUserRole()).thenReturn(UserRole.TEMPORARY_USER);
+		when(liveLesson.getStatus()).thenReturn(LiveLessonStatus.SCHEDULED);
+
+		assertFalse(checker.checkSchemaReadAccess(1L, notAdminUser));
 	}
 }
 
