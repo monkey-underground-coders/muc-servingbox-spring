@@ -215,6 +215,50 @@ public class MvcAccessCheckerUnitTests {
 		assertFalse(checker.checkSchemaReadAccess(1L, notAdminUser));
 	}
 
+	@Test
+	public void checkLiveLessonAccess() {
+		MvcAccessChecker checker = new MvcAccessChecker(fsEntityService, permissionService, resolver, schemaService, liveLessonService, userService);
+
+		LiveLesson liveLesson = LiveLesson.builder().build();
+		Optional<LiveLesson> optionalLiveLesson = Optional.of(liveLesson);
+		User adminUser = mock(User.class, "admin");
+
+		when(liveLessonService.getById(1L)).thenReturn(optionalLiveLesson);
+		when(adminUser.getUserRole()).thenReturn(UserRole.ADMIN);
+
+		assertTrue(checker.checkSchemaReadAccess(1L, adminUser));
+	}
+
+	@Test
+	public void checkLiveLessonAccessNotAdminButCreator() {
+		MvcAccessChecker checker = new MvcAccessChecker(fsEntityService, permissionService, resolver, schemaService, liveLessonService, userService);
+
+		LiveLesson liveLesson = mock(LiveLesson.class);
+		Optional<LiveLesson> optionalLiveLesson = Optional.of(liveLesson);
+		User notAdminUser = mock(User.class, "notAdmin");
+
+		when(liveLessonService.getById(1L)).thenReturn(optionalLiveLesson);
+		when(notAdminUser.getUserRole()).thenReturn(UserRole.TEMPORARY_USER);
+		when(liveLesson.getCreator()).thenReturn(notAdminUser);
+
+		assertTrue(checker.checkSchemaReadAccess(1L, notAdminUser));
+	}
+
+	@Test
+	public void checkLiveLessonAccessNotAdminNotCreator() {
+		MvcAccessChecker checker = new MvcAccessChecker(fsEntityService, permissionService, resolver, schemaService, liveLessonService, userService);
+
+		LiveLesson liveLesson = mock(LiveLesson.class);
+		Optional<LiveLesson> optionalLiveLesson = Optional.of(liveLesson);
+		User notAdminUser = mock(User.class, "notAdmin");
+		User anotherUser = mock(User.class, "user");
+
+		when(liveLessonService.getById(1L)).thenReturn(optionalLiveLesson);
+		when(notAdminUser.getUserRole()).thenReturn(UserRole.TEMPORARY_USER);
+		when(liveLesson.getCreator()).thenReturn(anotherUser);
+
+		assertFalse(checker.checkSchemaReadAccess(1L, notAdminUser));
+	}
 
 	@Test
 	public void checkUserInternalInfoAccessUserNotAdminButEqualsToNeededID() {
