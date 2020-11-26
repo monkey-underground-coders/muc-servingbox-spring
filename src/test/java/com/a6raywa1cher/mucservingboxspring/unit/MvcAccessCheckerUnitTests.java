@@ -169,6 +169,51 @@ public class MvcAccessCheckerUnitTests {
 
 		assertFalse(checker.checkSchemaReadAccess(1L, notAdminUser));
 	}
+
+	@Test
+	public void checkSchemaWriteAccess() {
+		MvcAccessChecker checker = new MvcAccessChecker(fsEntityService, permissionService, resolver, schemaService, liveLessonService, userService);
+
+		LessonSchema lessonSchema = LessonSchema.builder().build();
+		Optional<LessonSchema> optionalLessonSchema = Optional.of(lessonSchema);
+		User adminUser = mock(User.class, "admin");
+
+		when(schemaService.getById(1L)).thenReturn(optionalLessonSchema);
+		when(adminUser.getUserRole()).thenReturn(UserRole.ADMIN);
+
+		assertTrue(checker.checkSchemaReadAccess(1L, adminUser));
+	}
+
+	@Test
+	public void checkSchemaWriteAccessNotAdminButCreator() {
+		MvcAccessChecker checker = new MvcAccessChecker(fsEntityService, permissionService, resolver, schemaService, liveLessonService, userService);
+
+		LessonSchema lessonSchema = mock(LessonSchema.class);
+		Optional<LessonSchema> optionalLessonSchema = Optional.of(lessonSchema);
+		User notAdminUser = mock(User.class, "notAdmin");
+
+		when(schemaService.getById(1L)).thenReturn(optionalLessonSchema);
+		when(notAdminUser.getUserRole()).thenReturn(UserRole.TEMPORARY_USER);
+		when(lessonSchema.getCreator()).thenReturn(notAdminUser);
+
+		assertTrue(checker.checkSchemaReadAccess(1L, notAdminUser));
+	}
+
+	@Test
+	public void checkSchemaWriteAccessNotAdminNotCreator() {
+		MvcAccessChecker checker = new MvcAccessChecker(fsEntityService, permissionService, resolver, schemaService, liveLessonService, userService);
+
+		LessonSchema lessonSchema = mock(LessonSchema.class);
+		Optional<LessonSchema> optionalLessonSchema = Optional.of(lessonSchema);
+		User notAdminUser = mock(User.class, "notAdmin");
+		User anotherUser = mock(User.class, "user");
+
+		when(schemaService.getById(1L)).thenReturn(optionalLessonSchema);
+		when(notAdminUser.getUserRole()).thenReturn(UserRole.TEMPORARY_USER);
+		when(lessonSchema.getCreator()).thenReturn(anotherUser);
+
+		assertFalse(checker.checkSchemaReadAccess(1L, notAdminUser));
+	}
 }
 
 
