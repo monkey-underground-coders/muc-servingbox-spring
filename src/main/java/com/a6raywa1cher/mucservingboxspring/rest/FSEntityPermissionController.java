@@ -121,17 +121,17 @@ public class FSEntityPermissionController {
 		);
 	}
 
-	@GetMapping("/entity/{fid:[0-9]+}/children/")
+	@GetMapping("/entity/{fid:[0-9]+}/descendants/")
 	@PreAuthorize("@mvcAccessChecker.checkLowerAccessById(#fid, 'read')")
 	@Operation(security = @SecurityRequirement(name = "jwt"))
 	@JsonView(Views.Public.class)
-	public ResponseEntity<List<FSEntity>> getChildrenFSEntities(@PathVariable long fid, @Parameter(hidden = true) User user) {
+	public ResponseEntity<List<FSEntity>> getDescendantFSEntities(@PathVariable long fid, @Parameter(hidden = true) User user) {
 		Optional<FSEntity> optional = entityService.getById(fid);
 		if (optional.isEmpty()) {
 			return ResponseEntity.notFound().build();
 		}
 		return ResponseEntity.ok(
-			permissionService.getAllChildrenWithAccess(optional.get(), user, ActionType.READ)
+			permissionService.getAllDescendantsWithAccess(optional.get(), user, ActionType.READ)
 		);
 	}
 

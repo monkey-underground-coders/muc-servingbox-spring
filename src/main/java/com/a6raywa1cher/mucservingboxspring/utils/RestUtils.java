@@ -9,7 +9,7 @@ import com.querydsl.core.types.dsl.Expressions;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class RestUtils {
+public abstract class RestUtils {
 	public static BooleanExpression decodeFilter(String filter, Class<? extends AbstractPredicate> predicateClass) {
 		if (filter == null) return Expressions.asBoolean(true).isTrue();
 		PredicatesBuilder builder = new PredicatesBuilder(predicateClass);

@@ -31,6 +31,10 @@ public class FSEntity {
 
 	@Column
 	@JsonView(Views.Public.class)
+	private int pathLevel;
+
+	@Column
+	@JsonView(Views.Public.class)
 	private Boolean isFolder;
 
 	@Column(length = 1024)
@@ -109,7 +113,10 @@ public class FSEntity {
 
 	public static FSEntity createFile(String path, String diskObjectPath, long byteSize, User createdBy, boolean hidden) {
 		Assert.isTrue(path.charAt(path.length() - 1) != '/', "The path can't contain the path separator at the end");
-		return new FSEntity(null, path, false, diskObjectPath, hidden, createdBy, ZonedDateTime.now(), ZonedDateTime.now(), byteSize, -1);
+		return new FSEntity(null, path, (int) AlgorithmUtils.count(path, '/') + 1,
+			false, diskObjectPath, hidden,
+			createdBy, ZonedDateTime.now(), ZonedDateTime.now(),
+			byteSize, -1);
 	}
 
 	public static FSEntity createFolder(String path, User createdBy, boolean hidden) {
@@ -118,6 +125,9 @@ public class FSEntity {
 
 	public static FSEntity createFolder(String path, User createdBy, boolean hidden, long maxSize) {
 		Assert.isTrue(path.charAt(path.length() - 1) == '/', "The path must contain the path separator at the end");
-		return new FSEntity(null, path, true, null, hidden, createdBy, ZonedDateTime.now(), ZonedDateTime.now(), 0, maxSize);
+		return new FSEntity(null, path, (int) AlgorithmUtils.count(path, '/'),
+			true, null, hidden,
+			createdBy, ZonedDateTime.now(), ZonedDateTime.now(),
+			0, maxSize);
 	}
 }

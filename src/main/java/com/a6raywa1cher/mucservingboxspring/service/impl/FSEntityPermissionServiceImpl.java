@@ -79,6 +79,11 @@ public class FSEntityPermissionServiceImpl implements FSEntityPermissionService 
 		return treeByPath.stream().filter(e -> !parent.getId().equals(e.getId())).collect(Collectors.toList());
 	}
 
+	@Override
+	public List<FSEntity> getAllDescendantsWithAccess(FSEntity entity, User user, ActionType actionType) {
+		return entityRepository.getFirstLevelByPath(entity.getPath(), entity.getPathLevel() + 1);
+	}
+
 	private List<String> getAllPath(String s) {
 		List<Integer> slashes = AlgorithmUtils.getSlashes(s);
 		List<String> out = new ArrayList<>(slashes.size());
