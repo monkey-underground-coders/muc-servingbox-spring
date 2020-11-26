@@ -214,6 +214,42 @@ public class MvcAccessCheckerUnitTests {
 
 		assertFalse(checker.checkSchemaReadAccess(1L, notAdminUser));
 	}
+
+
+	@Test
+	public void checkUserInternalInfoAccessUserNotAdminButEqualsToNeededID() {
+		MvcAccessChecker checker = new MvcAccessChecker(fsEntityService, permissionService, resolver, schemaService, liveLessonService, userService);
+
+		User requester = mock(User.class, "requester");
+
+		when(requester.getId()).thenReturn(1L);
+
+		assertTrue(checker.checkUserInternalInfoAccess(1L, requester));
+	}
+
+	@Test
+	public void checkUserInternalInfoAccessUserIsAdminAndNotEqualsToNeededID() {
+		MvcAccessChecker checker = new MvcAccessChecker(fsEntityService, permissionService, resolver, schemaService, liveLessonService, userService);
+
+		User requester = mock(User.class, "requester");
+
+		when(requester.getId()).thenReturn(2L);
+		when(requester.getUserRole()).thenReturn(UserRole.ADMIN);
+
+		assertTrue(checker.checkUserInternalInfoAccess(1L, requester));
+	}
+
+	@Test
+	public void checkUserInternalInfoAccessUserNotAdminAndNotEqualsToNeededID() {
+		MvcAccessChecker checker = new MvcAccessChecker(fsEntityService, permissionService, resolver, schemaService, liveLessonService, userService);
+
+		User requester = mock(User.class, "requester");
+
+		when(requester.getId()).thenReturn(2L);
+		when(requester.getUserRole()).thenReturn(UserRole.TEMPORARY_USER);
+
+		assertFalse(checker.checkUserInternalInfoAccess(1L, requester));
+	}
 }
 
 
