@@ -1,7 +1,7 @@
 package com.a6raywa1cher.mucservingboxspring.service.impl;
 
-import com.a6raywa1cher.mucservingboxspring.component.ExpiredPermissionEntitiesRemoverComponent;
 import com.a6raywa1cher.mucservingboxspring.model.User;
+import com.a6raywa1cher.mucservingboxspring.model.UserRole;
 import com.a6raywa1cher.mucservingboxspring.model.file.ActionType;
 import com.a6raywa1cher.mucservingboxspring.model.file.FSEntity;
 import com.a6raywa1cher.mucservingboxspring.model.file.FSEntityPermission;
@@ -32,23 +32,20 @@ public class LiveLessonServiceImpl implements LiveLessonService {
 	private final LessonSchemaService schemaService;
 	private final FSEntityService fsEntityService;
 	private final FSEntityPermissionService permissionService;
-	private final ExpiredPermissionEntitiesRemoverComponent removerComponent;
 
 	@Value("${app.max-sizes.live-lesson-connected}")
 	public DataSize liveLessonSize;
 
 	public LiveLessonServiceImpl(LiveLessonRepository repository, LessonSchemaService schemaService,
-								 FSEntityService fsEntityService, FSEntityPermissionService permissionService,
-								 ExpiredPermissionEntitiesRemoverComponent removerComponent) {
+								 FSEntityService fsEntityService, FSEntityPermissionService permissionService) {
 		this.repository = repository;
 		this.schemaService = schemaService;
 		this.fsEntityService = fsEntityService;
 		this.permissionService = permissionService;
-		this.removerComponent = removerComponent;
 	}
 
 	private static ZonedDateTime getStartFromNow() {
-		return ZonedDateTime.now().plus(100, ChronoUnit.MILLIS);
+		return ZonedDateTime.now().minus(100, ChronoUnit.MILLIS);
 	}
 
 	@Override
@@ -63,6 +60,8 @@ public class LiveLessonServiceImpl implements LiveLessonService {
 		liveLesson.setCreator(creator);
 		LiveLesson saved = repository.save(liveLesson);
 		saved.setRoot(fsEntityService.createNewLiveLessonRoot(liveLesson));
+		permissionService.create(schema.getGenericFiles(), new ArrayList<>(), List.of(UserRole.STUDENT, UserRole.TEMPORARY_USER), true, List.of(ActionType.READ),
+			start, end);
 		return repository.save(saved);
 	}
 
@@ -104,10 +103,38 @@ public class LiveLessonServiceImpl implements LiveLessonService {
 
 	@Override
 	public LiveLesson edit(LiveLesson lesson, String name, ZonedDateTime start, ZonedDateTime end) {
+		Optional<FSEntityPermission> permissionOnGeneric = getPermissionOnGeneric(lesson);
+		if (permissionOnGeneric.isPresent()) {
+			FSEntityPermission permission = permissionOnGeneric.get();
+			permissionService.edit(permission,
+				permission.getEntity(),
+				permission.getAffectedUsers(),
+				permission.getAffectedUserRoles(),
+				permission.getApplicationDefined(),
+				permission.getActionTypes(),
+				start, end);
+		}
+		lesson.getManagedStudentPermissions()
+			.forEach(p -> permissionService.edit(p,
+				p.getEntity(),
+				p.getAffectedUsers(),
+				p.getAffectedUserRoles(),
+				p.getApplicationDefined(),
+				p.getActionTypes(),
+				start, end));
+
 		lesson.setName(name);
 		lesson.setStartAt(start);
 		lesson.setEndAt(end);
+
+
 		return repository.save(lesson);
+	}
+
+	public Optional<FSEntityPermission> getPermissionOnGeneric(LiveLesson lesson) {
+		return permissionService.getByFSEntity(lesson.getSchema().getGenericFiles()).stream()
+			.filter(p -> lesson.getStartAt().isEqual(p.getStartAt()) && lesson.getEndAt().isEqual(p.getEndAt()))
+			.findAny();
 	}
 
 	@Override
@@ -115,7 +142,7 @@ public class LiveLessonServiceImpl implements LiveLessonService {
 		FSEntity folder = fsEntityService.createNewFolder(lesson.getRoot(), Long.toString(user.getId()),
 			false, user);
 		FSEntityPermission permission = permissionService.create(folder, List.of(user), new ArrayList<>(),
-			true, List.of(ActionType.READ, ActionType.WRITE));
+			true, List.of(ActionType.READ, ActionType.WRITE), ZonedDateTime.now(), lesson.getEndAt());
 		fsEntityService.editMaxSize(folder, liveLessonSize.toBytes());
 		lesson.getManagedStudentPermissions().add(permission);
 		return repository.save(lesson);
@@ -125,7 +152,8 @@ public class LiveLessonServiceImpl implements LiveLessonService {
 	public LiveLesson stop(LiveLesson lesson) {
 		lesson.setEndAt(ZonedDateTime.now().minus(500, ChronoUnit.MILLIS));
 		LiveLesson save = repository.save(lesson);
-		removerComponent.removeExpiredPermissions();
+		permissionService.delete(lesson.getManagedStudentPermissions());
+		getPermissionOnGeneric(lesson).ifPresent(permissionService::delete);
 		return save;
 	}
 

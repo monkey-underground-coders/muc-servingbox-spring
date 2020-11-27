@@ -11,6 +11,8 @@ import com.a6raywa1cher.mucservingboxspring.service.FSEntityPermissionService;
 import com.a6raywa1cher.mucservingboxspring.utils.AlgorithmUtils;
 import org.springframework.stereotype.Service;
 
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -51,16 +53,28 @@ public class FSEntityPermissionServiceImpl implements FSEntityPermissionService 
 
 	@Override
 	public FSEntityPermission create(FSEntity entity, List<User> users, List<UserRole> userRoles, boolean applicationDefined, List<ActionType> actionTypes) {
-		return edit(new FSEntityPermission(), entity, users, userRoles, applicationDefined, actionTypes);
+		return edit(new FSEntityPermission(), entity, users, userRoles, applicationDefined, actionTypes, ZonedDateTime.now(), ZonedDateTime.now().plus(100, ChronoUnit.YEARS));
+	}
+
+	@Override
+	public FSEntityPermission create(FSEntity entity, List<User> users, List<UserRole> userRoles, boolean applicationDefined, List<ActionType> actionTypes, ZonedDateTime start, ZonedDateTime end) {
+		return edit(new FSEntityPermission(), entity, users, userRoles, applicationDefined, actionTypes, start, end);
 	}
 
 	@Override
 	public FSEntityPermission edit(FSEntityPermission fsEntityPermission, FSEntity entity, List<User> users, List<UserRole> userRoles, boolean applicationDefined, List<ActionType> actionTypes) {
+		return edit(fsEntityPermission, entity, users, userRoles, applicationDefined, actionTypes, fsEntityPermission.getStartAt(), fsEntityPermission.getEndAt());
+	}
+
+	@Override
+	public FSEntityPermission edit(FSEntityPermission fsEntityPermission, FSEntity entity, List<User> users, List<UserRole> userRoles, boolean applicationDefined, List<ActionType> actionTypes, ZonedDateTime start, ZonedDateTime end) {
 		fsEntityPermission.setEntity(entity);
 		fsEntityPermission.setAffectedUserRoles(new ArrayList<>(userRoles));
 		fsEntityPermission.setAffectedUsers(new ArrayList<>(users));
 		fsEntityPermission.setApplicationDefined(applicationDefined);
 		fsEntityPermission.setActionTypes(actionTypes);
+		fsEntityPermission.setStartAt(start);
+		fsEntityPermission.setEndAt(end);
 		return repository.save(fsEntityPermission);
 	}
 
@@ -70,13 +84,14 @@ public class FSEntityPermissionServiceImpl implements FSEntityPermissionService 
 		if (user.getUserRole().access.contains(fsEntity.getCreatedBy().getUserRole())) {
 			return true;
 		}
-		return repository.checkAccess(getUpperLevels(fsEntity.getPath()), user.getId(), user.getUserRole(), type.allMasks);
+		return repository.checkAccess(getUpperLevels(fsEntity.getPath()), user.getId(),
+			user.getUserRole(), type.allMasks, ZonedDateTime.now());
 	}
 
 	@Override
 	public Map<ActionType, Boolean> probe(FSEntity entity, User user) {
 		List<FSEntityPermission> permissions =
-			repository.getAllApplicableToEntity(getUpperLevels(entity.getPath()), user.getId(), user.getUserRole());
+			repository.getAllActiveApplicableToEntity(getUpperLevels(entity.getPath()), user.getId(), user.getUserRole(), ZonedDateTime.now());
 		Map<ActionType, Boolean> out = permissions.stream()
 			.flatMap(p -> p.getActionTypes().stream())
 			.distinct()
@@ -119,7 +134,7 @@ public class FSEntityPermissionServiceImpl implements FSEntityPermissionService 
 	@Override
 	public List<FSEntity> getAllReadable(User user) {
 		List<FSEntity> entities =
-			repository.getByUserByMasks(user.getUserRole(), user.getId(), ActionType.READ.allMasks)
+			repository.getActiveByUserAndMasks(user.getUserRole(), user.getId(), ActionType.READ.allMasks, ZonedDateTime.now())
 				.stream()
 				.map(FSEntityPermission::getEntity)
 				.filter(Objects::nonNull)

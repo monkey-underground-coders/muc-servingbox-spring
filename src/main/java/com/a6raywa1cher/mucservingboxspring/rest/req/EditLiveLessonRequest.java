@@ -2,9 +2,8 @@ package com.a6raywa1cher.mucservingboxspring.rest.req;
 
 import lombok.Data;
 
-import javax.validation.constraints.Future;
+import javax.validation.constraints.FutureOrPresent;
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.time.ZonedDateTime;
 
@@ -14,11 +13,8 @@ public class EditLiveLessonRequest {
 	@Size(max = 255)
 	private String name;
 
-	@NotNull
-	@Future
 	private ZonedDateTime start;
 
-	@NotNull
-	@Future
+	@FutureOrPresent
 	private ZonedDateTime end;
 }
