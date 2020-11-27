@@ -6,6 +6,7 @@ import com.a6raywa1cher.mucservingboxspring.model.file.ActionType;
 import com.a6raywa1cher.mucservingboxspring.model.file.FSEntity;
 import com.a6raywa1cher.mucservingboxspring.model.file.FSEntityPermission;
 
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -18,9 +19,17 @@ public interface FSEntityPermissionService {
 	FSEntityPermission create(FSEntity entity, List<User> users, List<UserRole> userRoles,
 							  boolean applicationDefined, List<ActionType> actionTypes);
 
+	FSEntityPermission create(FSEntity entity, List<User> users, List<UserRole> userRoles,
+							  boolean applicationDefined, List<ActionType> actionTypes,
+							  ZonedDateTime start, ZonedDateTime end);
+
 	FSEntityPermission edit(FSEntityPermission fsEntityPermission, FSEntity entity,
 							List<User> users, List<UserRole> userRoles, boolean applicationDefined,
 							List<ActionType> actionTypes);
+
+	FSEntityPermission edit(FSEntityPermission fsEntityPermission, FSEntity entity, List<User> users,
+							List<UserRole> userRoles, boolean applicationDefined, List<ActionType> actionTypes,
+							ZonedDateTime start, ZonedDateTime end);
 
 	boolean check(FSEntity fsEntity, ActionType type, User user);
 

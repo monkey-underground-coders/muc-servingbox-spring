@@ -156,14 +156,18 @@ public class LiveLessonController {
 		}
 		LiveLesson liveLesson = optionalLiveLesson.get();
 		ZonedDateTime now = ZonedDateTime.now();
-		if ((liveLesson.getStartAt().isBefore(now) && !liveLesson.getStartAt().equals(request.getStart())) ||
-			(liveLesson.getEndAt().isBefore(now) && !liveLesson.getEndAt().equals(request.getEnd()))) {
+		ZonedDateTime startAt = liveLesson.getStartAt();
+		ZonedDateTime endAt = liveLesson.getEndAt();
+		ZonedDateTime requestStart = request.getStart();
+		ZonedDateTime requestEnd = request.getEnd();
+		if ((requestStart != null && startAt.isBefore(now) && !startAt.isEqual(requestStart)) ||
+			(requestEnd != null && endAt.isBefore(now) && !endAt.isEqual(requestEnd))) {
 			throw new PastDateModificationException();
 		}
 		return ResponseEntity.ok(liveLessonService.edit(liveLesson,
 			LocalHtmlUtils.htmlEscape(request.getName(), 255),
-			request.getStart(),
-			request.getEnd()
+			requestStart != null ? requestStart : startAt,
+			requestEnd != null ? requestEnd : endAt
 		));
 	}
 
