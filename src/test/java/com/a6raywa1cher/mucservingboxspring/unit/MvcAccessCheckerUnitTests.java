@@ -17,6 +17,8 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -124,173 +126,152 @@ public class MvcAccessCheckerUnitTests {
 	}
 
 	@Test
-	public void checkSchemaReadAccess() {
+	public void checkSchemaReadAccessUserIsAdmin() {
 		MvcAccessChecker checker = new MvcAccessChecker(fsEntityService, permissionService, resolver, schemaService, liveLessonService, userService);
 
-		Optional<LessonSchema> optionalLessonSchema = Optional.of(LessonSchema.builder().build());
-		User adminUser = mock(User.class, "admin");
+		LiveLesson liveLesson = LiveLesson.builder().build();
+		LessonSchema lessonSchema = LessonSchema.builder()
+			.liveLessons(List.of(liveLesson)).build();
+		User adminUser = User.builder().userRole(UserRole.ADMIN).build();
 
-		when(schemaService.getById(1L)).thenReturn(optionalLessonSchema);
-		when(adminUser.getUserRole()).thenReturn(UserRole.ADMIN);
+		when(schemaService.getById(1L)).thenReturn(Optional.of(lessonSchema));
 
 		assertTrue(checker.checkSchemaReadAccess(1L, adminUser));
 	}
 
 	@Test
-	public void checkSchemaReadAccessNotAdmin() {
+	public void checkSchemaReadAccessNotAdminButLessonStatusIsLive() {
 		MvcAccessChecker checker = new MvcAccessChecker(fsEntityService, permissionService, resolver, schemaService, liveLessonService, userService);
 
-		LiveLesson liveLesson = mock(LiveLesson.class);
+		LiveLesson liveLesson = LiveLesson.builder()
+			.startAt(ZonedDateTime.now().minus(10L, ChronoUnit.MINUTES))
+			.endAt(ZonedDateTime.now().plus(20L, ChronoUnit.MINUTES)).build();
 		LessonSchema lessonSchema = LessonSchema.builder()
 			.liveLessons(List.of(liveLesson)).build();
-		Optional<LessonSchema> optionalLessonSchema = Optional.of(lessonSchema);
-		User notAdminUser = mock(User.class, "notAdmin");
+		User notAdminUser = User.builder().userRole(UserRole.TEMPORARY_USER).build();
 
-		when(schemaService.getById(1L)).thenReturn(optionalLessonSchema);
-		when(notAdminUser.getUserRole()).thenReturn(UserRole.TEMPORARY_USER);
-		when(liveLesson.getStatus()).thenReturn(LiveLessonStatus.LIVE);
+		when(schemaService.getById(1L)).thenReturn(Optional.of(lessonSchema));
 
 		assertTrue(checker.checkSchemaReadAccess(1L, notAdminUser));
 	}
 
 	@Test
-	public void checkSchemaReadAccessNotAdminNotTrue() {
+	public void checkSchemaReadAccessNotAdminNotLiveLessonStatus() {
 		MvcAccessChecker checker = new MvcAccessChecker(fsEntityService, permissionService, resolver, schemaService, liveLessonService, userService);
 
-		LiveLesson liveLesson = mock(LiveLesson.class);
+		LiveLesson liveLesson = LiveLesson.builder()
+			.startAt(ZonedDateTime.now().plus(10L, ChronoUnit.MINUTES))
+			.endAt(ZonedDateTime.now().plus(20L, ChronoUnit.MINUTES)).build();
 		LessonSchema lessonSchema = LessonSchema.builder()
 			.liveLessons(List.of(liveLesson)).build();
-		Optional<LessonSchema> optionalLessonSchema = Optional.of(lessonSchema);
-		User notAdminUser = mock(User.class, "notAdmin");
+		User notAdminUser = User.builder().userRole(UserRole.TEMPORARY_USER).build();
 
-		when(schemaService.getById(1L)).thenReturn(optionalLessonSchema);
-		when(notAdminUser.getUserRole()).thenReturn(UserRole.TEMPORARY_USER);
-		when(liveLesson.getStatus()).thenReturn(LiveLessonStatus.SCHEDULED);
+		when(schemaService.getById(1L)).thenReturn(Optional.of(lessonSchema));
 
 		assertFalse(checker.checkSchemaReadAccess(1L, notAdminUser));
 	}
 
 	@Test
-	public void checkSchemaWriteAccess() {
+	public void checkSchemaWriteAccessUserIsAdmin() {
 		MvcAccessChecker checker = new MvcAccessChecker(fsEntityService, permissionService, resolver, schemaService, liveLessonService, userService);
 
+
+		User notAdminUser = User.builder().userRole(UserRole.ADMIN).build();
 		LessonSchema lessonSchema = LessonSchema.builder().build();
-		Optional<LessonSchema> optionalLessonSchema = Optional.of(lessonSchema);
-		User adminUser = mock(User.class, "admin");
 
-		when(schemaService.getById(1L)).thenReturn(optionalLessonSchema);
-		when(adminUser.getUserRole()).thenReturn(UserRole.ADMIN);
+		when(schemaService.getById(1L)).thenReturn(Optional.of(lessonSchema));
 
-		assertTrue(checker.checkSchemaReadAccess(1L, adminUser));
+		assertTrue(checker.checkSchemaWriteAccess(1L, notAdminUser));
 	}
 
 	@Test
 	public void checkSchemaWriteAccessNotAdminButCreator() {
 		MvcAccessChecker checker = new MvcAccessChecker(fsEntityService, permissionService, resolver, schemaService, liveLessonService, userService);
 
-		LessonSchema lessonSchema = mock(LessonSchema.class);
-		Optional<LessonSchema> optionalLessonSchema = Optional.of(lessonSchema);
-		User notAdminUser = mock(User.class, "notAdmin");
 
-		when(schemaService.getById(1L)).thenReturn(optionalLessonSchema);
-		when(notAdminUser.getUserRole()).thenReturn(UserRole.TEMPORARY_USER);
-		when(lessonSchema.getCreator()).thenReturn(notAdminUser);
+		User notAdminUser = User.builder().userRole(UserRole.TEMPORARY_USER).build();
+		LessonSchema lessonSchema = LessonSchema.builder().creator(notAdminUser).build();
 
-		assertTrue(checker.checkSchemaReadAccess(1L, notAdminUser));
+		when(schemaService.getById(1L)).thenReturn(Optional.of(lessonSchema));
+
+		assertTrue(checker.checkSchemaWriteAccess(1L, notAdminUser));
 	}
 
 	@Test
 	public void checkSchemaWriteAccessNotAdminNotCreator() {
 		MvcAccessChecker checker = new MvcAccessChecker(fsEntityService, permissionService, resolver, schemaService, liveLessonService, userService);
 
-		LessonSchema lessonSchema = mock(LessonSchema.class);
-		Optional<LessonSchema> optionalLessonSchema = Optional.of(lessonSchema);
-		User notAdminUser = mock(User.class, "notAdmin");
-		User anotherUser = mock(User.class, "user");
 
-		when(schemaService.getById(1L)).thenReturn(optionalLessonSchema);
-		when(notAdminUser.getUserRole()).thenReturn(UserRole.TEMPORARY_USER);
-		when(lessonSchema.getCreator()).thenReturn(anotherUser);
+		User notAdminUser = User.builder().userRole(UserRole.TEMPORARY_USER).build();
+		User anotherUser = User.builder().build();
+		LessonSchema lessonSchema = LessonSchema.builder().creator(anotherUser).build();
 
-		assertFalse(checker.checkSchemaReadAccess(1L, notAdminUser));
+		when(schemaService.getById(1L)).thenReturn(Optional.of(lessonSchema));
+
+		assertFalse(checker.checkSchemaWriteAccess(1L, notAdminUser));
 	}
 
 	@Test
-	public void checkLiveLessonAccess() {
+	public void checkLiveLessonAccessUserIsAdmin() {
 		MvcAccessChecker checker = new MvcAccessChecker(fsEntityService, permissionService, resolver, schemaService, liveLessonService, userService);
 
-		LiveLesson liveLesson = LiveLesson.builder().build();
-		Optional<LiveLesson> optionalLiveLesson = Optional.of(liveLesson);
-		User adminUser = mock(User.class, "admin");
+		User adminUser = User.builder().userRole(UserRole.ADMIN).build();
+		LiveLesson liveLesson = LiveLesson.builder().creator(adminUser).build();
 
-		when(liveLessonService.getById(1L)).thenReturn(optionalLiveLesson);
-		when(adminUser.getUserRole()).thenReturn(UserRole.ADMIN);
+		when(liveLessonService.getById(1L)).thenReturn(Optional.of(liveLesson));
 
-		assertTrue(checker.checkSchemaReadAccess(1L, adminUser));
+		assertTrue(checker.checkLiveLessonAccess(1L, adminUser));
 	}
 
 	@Test
 	public void checkLiveLessonAccessNotAdminButCreator() {
 		MvcAccessChecker checker = new MvcAccessChecker(fsEntityService, permissionService, resolver, schemaService, liveLessonService, userService);
 
-		LiveLesson liveLesson = mock(LiveLesson.class);
-		Optional<LiveLesson> optionalLiveLesson = Optional.of(liveLesson);
-		User notAdminUser = mock(User.class, "notAdmin");
+		User notAdminUser = User.builder().userRole(UserRole.TEMPORARY_USER).build();
+		LiveLesson liveLesson = LiveLesson.builder().creator(notAdminUser).build();
 
-		when(liveLessonService.getById(1L)).thenReturn(optionalLiveLesson);
-		when(notAdminUser.getUserRole()).thenReturn(UserRole.TEMPORARY_USER);
-		when(liveLesson.getCreator()).thenReturn(notAdminUser);
+		when(liveLessonService.getById(1L)).thenReturn(Optional.of(liveLesson));
 
-		assertTrue(checker.checkSchemaReadAccess(1L, notAdminUser));
+		assertTrue(checker.checkLiveLessonAccess(1L, notAdminUser));
 	}
 
 	@Test
 	public void checkLiveLessonAccessNotAdminNotCreator() {
 		MvcAccessChecker checker = new MvcAccessChecker(fsEntityService, permissionService, resolver, schemaService, liveLessonService, userService);
 
-		LiveLesson liveLesson = mock(LiveLesson.class);
-		Optional<LiveLesson> optionalLiveLesson = Optional.of(liveLesson);
-		User notAdminUser = mock(User.class, "notAdmin");
-		User anotherUser = mock(User.class, "user");
 
-		when(liveLessonService.getById(1L)).thenReturn(optionalLiveLesson);
-		when(notAdminUser.getUserRole()).thenReturn(UserRole.TEMPORARY_USER);
-		when(liveLesson.getCreator()).thenReturn(anotherUser);
+		User anotherUser = User.builder().build();
+		LiveLesson liveLesson = LiveLesson.builder().creator(anotherUser).build();
+		User notAdminUser = User.builder().userRole(UserRole.TEMPORARY_USER).build();
 
-		assertFalse(checker.checkSchemaReadAccess(2L, notAdminUser));
+		when(liveLessonService.getById(1L)).thenReturn(Optional.of(liveLesson));
+
+		assertFalse(checker.checkLiveLessonAccess(1L, notAdminUser));
 	}
 
 	@Test
 	public void checkUserInternalInfoAccessUserNotAdminButEqualsToNeededID() {
 		MvcAccessChecker checker = new MvcAccessChecker(fsEntityService, permissionService, resolver, schemaService, liveLessonService, userService);
 
-		User requester = mock(User.class, "requester");
+		User requester = User.builder().id(1L).userRole(UserRole.TEMPORARY_USER).build();
 
-		when(requester.getId()).thenReturn(1L);
-
-		assertTrue(checker.checkUserInternalInfoAccess(1L, requester));
+		assertFalse(checker.checkUserInternalInfoAccess(1L, requester));
 	}
 
 	@Test
 	public void checkUserInternalInfoAccessUserIsAdminAndNotEqualsToNeededID() {
 		MvcAccessChecker checker = new MvcAccessChecker(fsEntityService, permissionService, resolver, schemaService, liveLessonService, userService);
 
-		User requester = mock(User.class, "requester");
+		User requester = User.builder().id(2L).userRole(UserRole.ADMIN).build();
 
-		when(requester.getId()).thenReturn(2L);
-		when(requester.getUserRole()).thenReturn(UserRole.ADMIN);
-
-		assertTrue(checker.checkUserInternalInfoAccess(1L, requester));
+		assertFalse(checker.checkUserInternalInfoAccess(1L, requester));
 	}
 
 	@Test
 	public void checkUserInternalInfoAccessUserNotAdminAndNotEqualsToNeededID() {
 		MvcAccessChecker checker = new MvcAccessChecker(fsEntityService, permissionService, resolver, schemaService, liveLessonService, userService);
 
-		User requester = mock(User.class, "requester");
-
-		when(requester.getId()).thenReturn(2L);
-		when(requester.getUserRole()).thenReturn(UserRole.TEMPORARY_USER);
+		User requester = User.builder().id(2L).userRole(UserRole.TEMPORARY_USER).build();
 
 		assertFalse(checker.checkUserInternalInfoAccess(1L, requester));
 	}
@@ -299,40 +280,37 @@ public class MvcAccessCheckerUnitTests {
 	public void checkUserPasswordChangeAccessUserIsTemporaryUser() {
 		MvcAccessChecker checker = new MvcAccessChecker(fsEntityService, permissionService, resolver, schemaService, liveLessonService, userService);
 
-		Optional<User> optionalUser = Optional.of(mock(User.class));
-		User requester = optionalUser.get();
+		User requester = User.builder().id(1L).userRole(UserRole.TEMPORARY_USER).build();
+		User targetUser = User.builder().id(2L).userRole(UserRole.TEMPORARY_USER).build();
 
-		when(userService.getById(1L)).thenReturn(optionalUser);
-		when(requester.getId()).thenReturn(1L);
-		when(requester.getUserRole()).thenReturn(UserRole.TEMPORARY_USER);
+		when(userService.getById(2L)).thenReturn(Optional.of(targetUser));
 
-		assertFalse(checker.checkUserPasswordChangeAccess(1L, requester));
+
+		assertFalse(checker.checkUserPasswordChangeAccess(2L, requester));
 	}
 
 	@Test
 	public void checkUserPasswordChangeAccessUserIsStudentAndHasEqualsID() {
 		MvcAccessChecker checker = new MvcAccessChecker(fsEntityService, permissionService, resolver, schemaService, liveLessonService, userService);
 
-		Optional<User> optionalUser = Optional.of(mock(User.class));
-		User requester = optionalUser.get();
+		User requester = User.builder().id(2L).userRole(UserRole.STUDENT).build();
+		User targetUser = User.builder().id(2L).userRole(UserRole.STUDENT).build();
 
-		when(userService.getById(1L)).thenReturn(optionalUser);
-		when(requester.getId()).thenReturn(1L);
-		when(requester.getUserRole()).thenReturn(UserRole.STUDENT);
+		when(userService.getById(2L)).thenReturn(Optional.of(targetUser));
 
-		assertTrue(checker.checkUserPasswordChangeAccess(1L, requester));
+
+		assertTrue(checker.checkUserPasswordChangeAccess(2L, requester));
 	}
 
 	@Test
 	public void checkUserPasswordChangeAccessUserIsStudentAndDoesntHaveEqualsID() {
 		MvcAccessChecker checker = new MvcAccessChecker(fsEntityService, permissionService, resolver, schemaService, liveLessonService, userService);
 
-		Optional<User> optionalUser = Optional.of(mock(User.class));
-		User requester = optionalUser.get();
+		User requester = User.builder().id(1L).userRole(UserRole.STUDENT).build();
+		User targetUser = User.builder().id(2L).userRole(UserRole.STUDENT).build();
 
-		when(userService.getById(1L)).thenReturn(optionalUser);
-		when(requester.getId()).thenReturn(1L);
-		when(requester.getUserRole()).thenReturn(UserRole.STUDENT);
+		when(userService.getById(2L)).thenReturn(Optional.of(targetUser));
+
 
 		assertFalse(checker.checkUserPasswordChangeAccess(2L, requester));
 	}
@@ -341,26 +319,24 @@ public class MvcAccessCheckerUnitTests {
 	public void checkUserPasswordChangeAccessUserIsTeacherAndHasEqualsID() {
 		MvcAccessChecker checker = new MvcAccessChecker(fsEntityService, permissionService, resolver, schemaService, liveLessonService, userService);
 
-		Optional<User> optionalUser = Optional.of(mock(User.class));
-		User requester = optionalUser.get();
+		User requester = User.builder().id(2L).userRole(UserRole.TEACHER).build();
+		User targetUser = User.builder().id(2L).userRole(UserRole.TEACHER).build();
 
-		when(userService.getById(1L)).thenReturn(optionalUser);
-		when(requester.getId()).thenReturn(1L);
-		when(requester.getUserRole()).thenReturn(UserRole.TEACHER);
+		when(userService.getById(2L)).thenReturn(Optional.of(targetUser));
 
-		assertTrue(checker.checkUserPasswordChangeAccess(1L, requester));
+
+		assertTrue(checker.checkUserPasswordChangeAccess(2L, requester));
 	}
 
 	@Test
 	public void checkUserPasswordChangeAccessUserIsTeacherAndDoesntHaveEqualsID() {
 		MvcAccessChecker checker = new MvcAccessChecker(fsEntityService, permissionService, resolver, schemaService, liveLessonService, userService);
 
-		Optional<User> optionalUser = Optional.of(mock(User.class));
-		User requester = optionalUser.get();
+		User requester = User.builder().id(1L).userRole(UserRole.TEACHER).build();
+		User targetUser = User.builder().id(2L).userRole(UserRole.TEACHER).build();
 
-		when(userService.getById(1L)).thenReturn(optionalUser);
-		when(requester.getId()).thenReturn(1L);
-		when(requester.getUserRole()).thenReturn(UserRole.TEACHER);
+		when(userService.getById(2L)).thenReturn(Optional.of(targetUser));
+
 
 		assertFalse(checker.checkUserPasswordChangeAccess(2L, requester));
 	}
@@ -369,12 +345,11 @@ public class MvcAccessCheckerUnitTests {
 	public void checkUserPasswordChangeAccessUserIsAdmin() {
 		MvcAccessChecker checker = new MvcAccessChecker(fsEntityService, permissionService, resolver, schemaService, liveLessonService, userService);
 
-		Optional<User> optionalUser = Optional.of(mock(User.class));
-		User requester = optionalUser.get();
+		User requester = User.builder().id(1L).userRole(UserRole.ADMIN).build();
+		User targetUser = User.builder().id(2L).userRole(UserRole.TEACHER).build();
 
-		when(userService.getById(1L)).thenReturn(optionalUser);
-		when(requester.getId()).thenReturn(1L);
-		when(requester.getUserRole()).thenReturn(UserRole.ADMIN);
+		when(userService.getById(2L)).thenReturn(Optional.of(targetUser));
+
 
 		assertTrue(checker.checkUserPasswordChangeAccess(2L, requester));
 	}
