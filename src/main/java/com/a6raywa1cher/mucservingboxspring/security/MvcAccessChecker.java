@@ -38,6 +38,7 @@ public class MvcAccessChecker {
 		this.userService = userService;
 	}
 
+
 	// ----------------------------------------------- checkEntityAccess -----------------------------------------------
 
 	private boolean checkEntityAccess(FSEntity fsEntity, ActionType actionType, User user) {
