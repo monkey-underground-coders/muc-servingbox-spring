@@ -7,6 +7,7 @@ import com.a6raywa1cher.mucservingboxspring.model.lesson.LiveLesson;
 import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.OutputStream;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -34,6 +35,8 @@ public interface FSEntityService {
 
 	Optional<FSEntity> getParent(FSEntity child);
 
+	void packageFSEntity(FSEntity entity, OutputStream outputStream, PackagePolicy policy);
+
 	long calculateSpaceLeft(String childPath);
 
 	long calculateMaxSize(String childPath);
@@ -51,4 +54,9 @@ public interface FSEntityService {
 						boolean hidden, User creator);
 
 	void deleteEntity(FSEntity entity);
+
+	enum PackagePolicy {
+		NORMAL,
+		COMPRESS_FIRST_LEVEL
+	}
 }
