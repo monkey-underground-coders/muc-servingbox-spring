@@ -255,7 +255,7 @@ public class MvcAccessCheckerUnitTests {
 
 		User requester = User.builder().id(1L).userRole(UserRole.TEMPORARY_USER).build();
 
-		assertFalse(checker.checkUserInternalInfoAccess(1L, requester));
+		assertTrue(checker.checkUserInternalInfoAccess(1L, requester));
 	}
 
 	@Test
@@ -264,7 +264,7 @@ public class MvcAccessCheckerUnitTests {
 
 		User requester = User.builder().id(2L).userRole(UserRole.ADMIN).build();
 
-		assertFalse(checker.checkUserInternalInfoAccess(1L, requester));
+		assertTrue(checker.checkUserInternalInfoAccess(1L, requester));
 	}
 
 	@Test
