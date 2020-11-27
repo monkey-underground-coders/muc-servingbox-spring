@@ -295,7 +295,7 @@ public class MvcAccessCheckerUnitTests {
 	}
 
 	@Test
-	public void checkUserInternalInfoAccessIfUserIDEqualsToNeededID() {
+	public void checkUserInternalInfoAccessIfUserIDRequesterAndTargetEquals() {
 		MvcAccessChecker checker = new MvcAccessChecker(fsEntityService, permissionService, resolver, schemaService, liveLessonService, userService);
 
 		User requester = User.builder()
@@ -319,7 +319,7 @@ public class MvcAccessCheckerUnitTests {
 	}
 
 	@Test
-	public void checkUserInternalInfoAccessIfUserIsNotAdminAndUserIDNotEqualsToNeededID() {
+	public void checkUserInternalInfoAccessIfUserIsNotAdminAndRequesterAndTargetNotEquals() {
 		MvcAccessChecker checker = new MvcAccessChecker(fsEntityService, permissionService, resolver, schemaService, liveLessonService, userService);
 
 		User requester = User.builder()
