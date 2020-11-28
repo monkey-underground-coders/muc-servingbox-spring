@@ -6,17 +6,25 @@ import com.a6raywa1cher.mucservingboxspring.model.file.FSEntity;
 import com.a6raywa1cher.mucservingboxspring.model.lesson.LessonSchema;
 import com.a6raywa1cher.mucservingboxspring.model.lesson.LiveLesson;
 import com.a6raywa1cher.mucservingboxspring.model.repo.FSEntityRepository;
+import com.a6raywa1cher.mucservingboxspring.rest.req.PackagePolicy;
 import com.a6raywa1cher.mucservingboxspring.service.DiskService;
 import com.a6raywa1cher.mucservingboxspring.service.FSEntityPermissionService;
 import com.a6raywa1cher.mucservingboxspring.service.FSEntityService;
 import com.a6raywa1cher.mucservingboxspring.utils.AlgorithmUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StreamUtils;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.net.URI;
 import java.nio.file.Path;
 import java.time.ZonedDateTime;
@@ -26,8 +34,13 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+
+import static com.a6raywa1cher.mucservingboxspring.utils.AlgorithmUtils.getUpperLevels;
 
 @Service
+@Slf4j
 public class FSEntityServiceImpl implements FSEntityService {
 	private final FSEntityRepository repository;
 	private final FSEntityPermissionService permissionService;
@@ -182,6 +195,51 @@ public class FSEntityServiceImpl implements FSEntityService {
 	public Optional<FSEntity> getParent(FSEntity child) {
 		String childPath = child.getPath();
 		return this.getByPath(childPath.substring(0, childPath.lastIndexOf('/')));
+	}
+
+	@Override
+	public void packageFSEntity(FSEntity entity, OutputStream outputStream, PackagePolicy policy) {
+		List<FSEntity> fsEntities = repository.getTreeByPath(entity.getPath()).stream()
+			.filter(e -> !e.equals(entity))
+			.sorted(Comparator.comparing(FSEntity::getPathLevel))
+			.collect(Collectors.toList());
+		try (ZipOutputStream zipOutputStream = new ZipOutputStream(outputStream)) {
+			Set<String> addedEntries = new HashSet<>();
+			for (FSEntity fsEntity : fsEntities) {
+				for (String pathNode : getUpperLevels(fsEntity.getPath())) {
+					if (entity.isFolder()) {
+						pathNode = pathNode.replaceFirst(entity.getPath(), "");
+					}
+					if ("/".equals(pathNode) || StringUtils.isEmpty(pathNode)) {
+						continue;
+					}
+					if (addedEntries.contains(pathNode)) {
+						continue;
+					}
+					if (policy == PackagePolicy.COMPRESS_FIRST_LEVEL) {
+						pathNode = "[" + pathNode.replaceFirst("/", "]");
+					}
+					addedEntries.add(pathNode);
+					ZipEntry zipEntry = new ZipEntry(pathNode);
+					zipOutputStream.putNextEntry(zipEntry);
+					boolean isFile = !pathNode.endsWith("/");
+					if (isFile) {
+						File file = diskService.resolve(Path.of(fsEntity.getDiskObjectPath()));
+						try (FileInputStream fis = new FileInputStream(file)) {
+							StreamUtils.copy(fis, zipOutputStream);
+						}
+					}
+					zipOutputStream.closeEntry();
+					if (isFile) {
+						zipOutputStream.flush();
+					}
+				}
+			}
+		} catch (IOException e) {
+			log.error(String.format("Error during packaging FSEntity %s", entity.getPath()), e);
+		} catch (Exception e) {
+			log.error("WTF?!", e);
+		}
 	}
 
 	@Override

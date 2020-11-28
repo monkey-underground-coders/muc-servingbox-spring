@@ -16,7 +16,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 @Service
 public class FSEntityPermissionServiceImpl implements FSEntityPermissionService {
@@ -26,19 +25,6 @@ public class FSEntityPermissionServiceImpl implements FSEntityPermissionService 
 	public FSEntityPermissionServiceImpl(FSEntityPermissionRepository repository, FSEntityRepository entityRepository) {
 		this.repository = repository;
 		this.entityRepository = entityRepository;
-	}
-
-	private static List<String> getUpperLevels(String path) {
-		if (path == null) return new ArrayList<>();
-		if (path.equals("/")) return Collections.singletonList(path);
-		String finalPath = path.endsWith("/") ? path.substring(0, path.length() - 1) : path;
-		List<String> out = IntStream.range(0, finalPath.length())
-			.filter(i -> finalPath.charAt(i) == '/')
-			.boxed()
-			.map(i -> finalPath.substring(0, i + 1))
-			.collect(Collectors.toList());
-		out.add(path);
-		return out;
 	}
 
 	@Override
@@ -84,14 +70,14 @@ public class FSEntityPermissionServiceImpl implements FSEntityPermissionService 
 		if (user.getUserRole().access.contains(fsEntity.getCreatedBy().getUserRole())) {
 			return true;
 		}
-		return repository.checkAccess(getUpperLevels(fsEntity.getPath()), user.getId(),
+		return repository.checkAccess(AlgorithmUtils.getUpperLevels(fsEntity.getPath()), user.getId(),
 			user.getUserRole(), type.allMasks, ZonedDateTime.now());
 	}
 
 	@Override
 	public Map<ActionType, Boolean> probe(FSEntity entity, User user) {
 		List<FSEntityPermission> permissions =
-			repository.getAllActiveApplicableToEntity(getUpperLevels(entity.getPath()), user.getId(), user.getUserRole(), ZonedDateTime.now());
+			repository.getAllActiveApplicableToEntity(AlgorithmUtils.getUpperLevels(entity.getPath()), user.getId(), user.getUserRole(), ZonedDateTime.now());
 		Map<ActionType, Boolean> out = permissions.stream()
 			.flatMap(p -> p.getActionTypes().stream())
 			.distinct()
@@ -113,24 +99,6 @@ public class FSEntityPermissionServiceImpl implements FSEntityPermissionService 
 		return entityRepository.getFirstLevelByPath(entity.getPath(), entity.getPathLevel() + 1);
 	}
 
-	private List<String> getAllPath(String s) {
-		List<Integer> slashes = AlgorithmUtils.getSlashes(s);
-		List<String> out = new ArrayList<>(slashes.size());
-		out.add("/");
-		for (int i = 0; i < slashes.size(); i++) {
-			String node;
-			if (i + 1 == slashes.size()) {
-				node = s;
-			} else {
-				int right = slashes.get(i + 1);
-				node = s.substring(0, right + 1);
-			}
-			if (node.equals("")) continue;
-			out.add(node);
-		}
-		return out;
-	}
-
 	@Override
 	public List<FSEntity> getAllReadable(User user) {
 		List<FSEntity> entities =
@@ -143,7 +111,7 @@ public class FSEntityPermissionServiceImpl implements FSEntityPermissionService 
 			.collect(Collectors.toMap(FSEntity::getPath, Function.identity()));
 		Map<String, Set<String>> graph = new HashMap<>();
 		for (FSEntity e : entities) {
-			List<String> allPath = getAllPath(e.getPath());
+			List<String> allPath = AlgorithmUtils.getUpperLevels(e.getPath());
 			for (int i = 1; i < allPath.size(); i++) {
 				String n1 = allPath.get(i - 1);
 				String n2 = allPath.get(i);
