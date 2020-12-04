@@ -114,7 +114,7 @@ public class LiveLessonController {
 	}
 
 	@GetMapping("/user/self")
-	@Secured({"ROLE_TEACHER"})
+	@Secured({"ROLE_TEACHER", "ROLE_ADMIN"})
 	@Operation(security = @SecurityRequirement(name = "jwt"))
 	@JsonView(Views.Public.class)
 	@PageableAsQueryParam

@@ -6,6 +6,7 @@ import com.a6raywa1cher.mucservingboxspring.model.file.FSEntity;
 import com.a6raywa1cher.mucservingboxspring.model.lesson.LessonSchema;
 import com.a6raywa1cher.mucservingboxspring.model.lesson.LiveLesson;
 import com.a6raywa1cher.mucservingboxspring.model.repo.FSEntityRepository;
+import com.a6raywa1cher.mucservingboxspring.rest.req.PackagePolicy;
 import com.a6raywa1cher.mucservingboxspring.service.DiskService;
 import com.a6raywa1cher.mucservingboxspring.service.FSEntityPermissionService;
 import com.a6raywa1cher.mucservingboxspring.service.FSEntityService;
@@ -17,6 +18,7 @@ import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StreamUtils;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
@@ -205,8 +207,17 @@ public class FSEntityServiceImpl implements FSEntityService {
 			Set<String> addedEntries = new HashSet<>();
 			for (FSEntity fsEntity : fsEntities) {
 				for (String pathNode : getUpperLevels(fsEntity.getPath())) {
+					if (entity.isFolder()) {
+						pathNode = pathNode.replaceFirst(entity.getPath(), "");
+					}
+					if ("/".equals(pathNode) || StringUtils.isEmpty(pathNode)) {
+						continue;
+					}
 					if (addedEntries.contains(pathNode)) {
 						continue;
+					}
+					if (policy == PackagePolicy.COMPRESS_FIRST_LEVEL) {
+						pathNode = "[" + pathNode.replaceFirst("/", "]");
 					}
 					addedEntries.add(pathNode);
 					ZipEntry zipEntry = new ZipEntry(pathNode);
@@ -226,6 +237,8 @@ public class FSEntityServiceImpl implements FSEntityService {
 			}
 		} catch (IOException e) {
 			log.error(String.format("Error during packaging FSEntity %s", entity.getPath()), e);
+		} catch (Exception e) {
+			log.error("WTF?!", e);
 		}
 	}
 

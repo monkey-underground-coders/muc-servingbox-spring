@@ -5,7 +5,9 @@ import com.a6raywa1cher.mucservingboxspring.model.file.FSEntity;
 import com.a6raywa1cher.mucservingboxspring.rest.exc.*;
 import com.a6raywa1cher.mucservingboxspring.rest.req.CreateFolderRequest;
 import com.a6raywa1cher.mucservingboxspring.rest.req.MoveEntityRequest;
+import com.a6raywa1cher.mucservingboxspring.rest.req.PackagePolicy;
 import com.a6raywa1cher.mucservingboxspring.service.FSEntityService;
+import com.a6raywa1cher.mucservingboxspring.utils.LocalHtmlUtils;
 import com.a6raywa1cher.mucservingboxspring.utils.Views;
 import com.fasterxml.jackson.annotation.JsonView;
 import io.swagger.v3.oas.annotations.Operation;
@@ -18,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import javax.transaction.Transactional;
 import javax.validation.Valid;
@@ -115,6 +118,21 @@ public class FSEntityController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
 		}
 		return ResponseEntity.ok().build();
+	}
+
+	@GetMapping(value = "/{fid:[0-9]+}/compress_download", produces = "application/zip")
+	@PreAuthorize("@mvcAccessChecker.checkEntityAccessById(#fid, 'read')")
+	@Operation(security = @SecurityRequirement(name = "jwt"))
+	@JsonView(Views.Public.class)
+	public ResponseEntity<StreamingResponseBody> compressDownload(@PathVariable long fid, @RequestParam(value = "policy", defaultValue = "NORMAL") PackagePolicy packagePolicy) {
+		Optional<FSEntity> optionalFSEntity = entityService.getById(fid);
+		if (optionalFSEntity.isEmpty()) {
+			return ResponseEntity.notFound().build();
+		}
+		FSEntity file = optionalFSEntity.get();
+		return ResponseEntity.ok()
+			.header("Content-Disposition", "attachment; filename=" + LocalHtmlUtils.htmlEscape(file.getName()) + ".zip")
+			.body(outputStream -> entityService.packageFSEntity(file, outputStream, packagePolicy));
 	}
 
 	@GetMapping(value = "/{fid:[0-9]+}/content", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
