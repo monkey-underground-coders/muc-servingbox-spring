@@ -55,9 +55,4 @@ public interface FSEntityService {
 						boolean hidden, User creator);
 
 	void deleteEntity(FSEntity entity);
-
-	enum PackagePolicy {
-		NORMAL,
-		COMPRESS_FIRST_LEVEL
-	}
 }
