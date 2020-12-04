@@ -198,7 +198,7 @@ public class FSEntityServiceImpl implements FSEntityService {
 	}
 
 	@Override
-	public void packageFSEntity(FSEntity entity, OutputStream outputStream, PackagePolicy policy) {
+	public void packageFSEntity(FSEntity entity, OutputStream outputStream, PackagePolicy policy) throws Exception {
 		List<FSEntity> fsEntities = repository.getTreeByPath(entity.getPath()).stream()
 			.filter(e -> !e.equals(entity))
 			.sorted(Comparator.comparing(FSEntity::getPathLevel))
@@ -207,22 +207,38 @@ public class FSEntityServiceImpl implements FSEntityService {
 			Set<String> addedEntries = new HashSet<>();
 			for (FSEntity fsEntity : fsEntities) {
 				for (String pathNode : getUpperLevels(fsEntity.getPath())) {
+					if (pathNode.length() < entity.getPath().length()) {
+						continue;
+					}
+					String reducedPathNode;
 					if (entity.isFolder()) {
-						pathNode = pathNode.replaceFirst(entity.getPath(), "");
+						reducedPathNode = pathNode.replaceFirst(entity.getPath(), "");
+					} else {
+						reducedPathNode = pathNode;
 					}
-					if ("/".equals(pathNode) || StringUtils.isEmpty(pathNode)) {
+					if ("/".equals(reducedPathNode) || StringUtils.isEmpty(reducedPathNode)) {
 						continue;
 					}
-					if (addedEntries.contains(pathNode)) {
-						continue;
-					}
+					String normalizedPathNode;
 					if (policy == PackagePolicy.COMPRESS_FIRST_LEVEL) {
-						pathNode = "[" + pathNode.replaceFirst("/", "]");
+						if (AlgorithmUtils.count(reducedPathNode, '/') == 1 && reducedPathNode.charAt(reducedPathNode.length() - 1) == '/') {
+							continue;
+						}
+						if (AlgorithmUtils.count(reducedPathNode, '/') != 0) {
+							normalizedPathNode = "[" + reducedPathNode.replaceFirst("/", "]");
+						} else {
+							normalizedPathNode = reducedPathNode;
+						}
+					} else {
+						normalizedPathNode = reducedPathNode;
 					}
-					addedEntries.add(pathNode);
-					ZipEntry zipEntry = new ZipEntry(pathNode);
+					if (addedEntries.contains(normalizedPathNode)) {
+						continue;
+					}
+					addedEntries.add(normalizedPathNode);
+					ZipEntry zipEntry = new ZipEntry(normalizedPathNode);
 					zipOutputStream.putNextEntry(zipEntry);
-					boolean isFile = !pathNode.endsWith("/");
+					boolean isFile = !normalizedPathNode.endsWith("/");
 					if (isFile) {
 						File file = diskService.resolve(Path.of(fsEntity.getDiskObjectPath()));
 						try (FileInputStream fis = new FileInputStream(file)) {
@@ -237,8 +253,10 @@ public class FSEntityServiceImpl implements FSEntityService {
 			}
 		} catch (IOException e) {
 			log.error(String.format("Error during packaging FSEntity %s", entity.getPath()), e);
+			throw e;
 		} catch (Exception e) {
 			log.error("WTF?!", e);
+			throw e;
 		}
 	}
 

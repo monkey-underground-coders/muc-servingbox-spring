@@ -25,6 +25,7 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 import javax.validation.constraints.Pattern;
+import java.io.IOException;
 import java.util.Optional;
 
 @RestController
@@ -132,7 +133,13 @@ public class FSEntityController {
 		FSEntity file = optionalFSEntity.get();
 		return ResponseEntity.ok()
 			.header("Content-Disposition", "attachment; filename=" + LocalHtmlUtils.htmlEscape(file.getName()) + ".zip")
-			.body(outputStream -> entityService.packageFSEntity(file, outputStream, packagePolicy));
+			.body(outputStream -> {
+				try {
+					entityService.packageFSEntity(file, outputStream, packagePolicy);
+				} catch (Exception e) {
+					throw new IOException(e);
+				}
+			});
 	}
 
 	@GetMapping(value = "/{fid:[0-9]+}/content", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
