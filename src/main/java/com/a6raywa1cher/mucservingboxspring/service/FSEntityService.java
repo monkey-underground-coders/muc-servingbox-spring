@@ -36,7 +36,7 @@ public interface FSEntityService {
 
 	Optional<FSEntity> getParent(FSEntity child);
 
-	void packageFSEntity(FSEntity entity, OutputStream outputStream, PackagePolicy policy);
+	void packageFSEntity(FSEntity entity, OutputStream outputStream, PackagePolicy policy) throws Exception;
 
 	long calculateSpaceLeft(String childPath);
 
