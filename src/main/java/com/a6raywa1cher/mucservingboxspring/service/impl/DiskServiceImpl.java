@@ -4,7 +4,9 @@ import com.a6raywa1cher.mucservingboxspring.service.DiskService;
 import com.a6raywa1cher.mucservingboxspring.service.exc.ResourceBusyException;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.PathResource;
 import org.springframework.core.io.Resource;
@@ -38,12 +40,14 @@ class BusyResource implements AutoCloseable {
 }
 
 @Service
+@AllArgsConstructor
 @Slf4j
 public class DiskServiceImpl implements DiskService {
 	private final Path root;
 	private final ForkJoinPool pool;
 	private final Set<Path> busyFiles;
 
+	@Autowired
 	public DiskServiceImpl(@Value("${app.upload-dir}") Path root) {
 		this.root = root;
 		this.pool = new ForkJoinPool();
