@@ -33,7 +33,8 @@ public class LessonSchemaServiceImpl implements LessonSchemaService {
 	private String onTheFlyTitle;
 
 	@Autowired
-	public LessonSchemaServiceImpl(FSEntityService service, LessonSchemaRepository repository, FSEntityPermissionService permissionService) {
+	public LessonSchemaServiceImpl(FSEntityService service, LessonSchemaRepository repository,
+								   FSEntityPermissionService permissionService) {
 		this.service = service;
 		this.repository = repository;
 		this.permissionService = permissionService;
@@ -48,7 +49,8 @@ public class LessonSchemaServiceImpl implements LessonSchemaService {
 		LessonSchema saved = repository.save(lessonSchema);
 		FSEntity fsEntity = service.createNewLessonRoot(saved);
 		lessonSchema.setGenericFiles(fsEntity);
-		permissionService.create(fsEntity, List.of(creator), new ArrayList<>(), true, List.of(ActionType.READ, ActionType.WRITE, ActionType.MANAGE_PERMISSIONS));
+		permissionService.create(fsEntity, List.of(creator), new ArrayList<>(), true,
+			List.of(ActionType.READ, ActionType.WRITE, ActionType.MANAGE_PERMISSIONS));
 		return repository.save(saved);
 	}
 
@@ -59,7 +61,8 @@ public class LessonSchemaServiceImpl implements LessonSchemaService {
 
 	@Override
 	public LessonSchema createOnFly(User creator) {
-		String title = String.format(onTheFlyTitle, ZonedDateTime.now().format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT)));
+		String title = String.format(onTheFlyTitle,
+			ZonedDateTime.now().format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT)));
 		return create(title, null, creator, true);
 	}
 
