@@ -5,6 +5,7 @@ import com.a6raywa1cher.mucservingboxspring.service.exc.ResourceBusyException;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
 import lombok.AllArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,6 +20,7 @@ import java.io.*;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
 
@@ -44,13 +46,13 @@ class BusyResource implements AutoCloseable {
 @Slf4j
 public class DiskServiceImpl implements DiskService {
 	private final Path root;
-	private final ForkJoinPool pool;
+	private final ExecutorService executorService;
 	private final Set<Path> busyFiles;
 
 	@Autowired
 	public DiskServiceImpl(@Value("${app.upload-dir}") Path root) {
 		this.root = root;
-		this.pool = new ForkJoinPool();
+		this.executorService = new ForkJoinPool();
 		this.busyFiles = new HashSet<>();
 	}
 
@@ -139,10 +141,11 @@ public class DiskServiceImpl implements DiskService {
 	}
 
 	@Override
+	@SneakyThrows(InterruptedException.class)
 	public Map<Path, Pair<Path, Long>> copyFiles(List<Path> path) {
 		Map<Path, Pair<Path, Long>> out = path.stream()
 			.collect(Collectors.toMap(p -> p, p -> Pair.of(root.relativize(newPath()), root.resolve(p).toFile().length())));
-		pool.invokeAll(out.entrySet().stream()
+		executorService.invokeAll(out.entrySet().stream()
 			.map(e -> (Callable<Void>) () -> {
 				Path oldPath = root.resolve(e.getKey());
 				Path newPath = root.resolve(e.getValue().getFirst());
@@ -183,8 +186,9 @@ public class DiskServiceImpl implements DiskService {
 	}
 
 	@Override
+	@SneakyThrows(InterruptedException.class)
 	public void deleteFiles(List<Path> files) {
-		pool.invokeAll(files.stream()
+		executorService.invokeAll(files.stream()
 			.distinct()
 			.map(p -> (Callable<Void>) () -> {
 				deleteFile(p);

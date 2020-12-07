@@ -18,7 +18,6 @@ import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StreamUtils;
-import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
@@ -197,6 +196,27 @@ public class FSEntityServiceImpl implements FSEntityService {
 		return this.getByPath(childPath.substring(0, childPath.lastIndexOf('/')));
 	}
 
+	private List<String> getReducedUpperLevels(String targetPath, String rootPath, PackagePolicy policy) {
+		if (targetPath.length() <= rootPath.length()) {
+			return Collections.emptyList();
+		}
+		String reducedPath = targetPath.substring(rootPath.length());
+		if (policy == PackagePolicy.COMPRESS_FIRST_LEVEL) {
+			boolean isFile = reducedPath.charAt(reducedPath.length() - 1) != '/';
+			long level = AlgorithmUtils.count(isFile ? reducedPath + '/' : reducedPath, '/');
+			if (level == 1) {
+				if (!isFile) {
+					return Collections.emptyList();
+				}
+				return getUpperLevels(reducedPath);
+			}
+			String compressedPath = '[' + reducedPath.replaceFirst("/", "]");
+			return getUpperLevels(compressedPath);
+		} else {
+			return getUpperLevels(reducedPath);
+		}
+	}
+
 	@Override
 	public void packageFSEntity(FSEntity entity, OutputStream outputStream, PackagePolicy policy) throws Exception {
 		List<FSEntity> fsEntities = repository.getTreeByPath(entity.getPath()).stream()
@@ -206,39 +226,14 @@ public class FSEntityServiceImpl implements FSEntityService {
 		try (ZipOutputStream zipOutputStream = new ZipOutputStream(outputStream)) {
 			Set<String> addedEntries = new HashSet<>();
 			for (FSEntity fsEntity : fsEntities) {
-				for (String pathNode : getUpperLevels(fsEntity.getPath())) {
-					if (pathNode.length() < entity.getPath().length()) {
+				for (String pathNode : getReducedUpperLevels(fsEntity.getPath(), entity.getPath(), policy)) {
+					if (addedEntries.contains(pathNode)) {
 						continue;
 					}
-					String reducedPathNode;
-					if (entity.isFolder()) {
-						reducedPathNode = pathNode.replaceFirst(entity.getPath(), "");
-					} else {
-						reducedPathNode = pathNode;
-					}
-					if ("/".equals(reducedPathNode) || StringUtils.isEmpty(reducedPathNode)) {
-						continue;
-					}
-					String normalizedPathNode;
-					if (policy == PackagePolicy.COMPRESS_FIRST_LEVEL) {
-						if (AlgorithmUtils.count(reducedPathNode, '/') == 1 && reducedPathNode.charAt(reducedPathNode.length() - 1) == '/') {
-							continue;
-						}
-						if (AlgorithmUtils.count(reducedPathNode, '/') != 0) {
-							normalizedPathNode = "[" + reducedPathNode.replaceFirst("/", "]");
-						} else {
-							normalizedPathNode = reducedPathNode;
-						}
-					} else {
-						normalizedPathNode = reducedPathNode;
-					}
-					if (addedEntries.contains(normalizedPathNode)) {
-						continue;
-					}
-					addedEntries.add(normalizedPathNode);
-					ZipEntry zipEntry = new ZipEntry(normalizedPathNode);
+					addedEntries.add(pathNode);
+					ZipEntry zipEntry = new ZipEntry(pathNode);
 					zipOutputStream.putNextEntry(zipEntry);
-					boolean isFile = !normalizedPathNode.endsWith("/");
+					boolean isFile = !pathNode.endsWith("/");
 					if (isFile) {
 						File file = diskService.resolve(Path.of(fsEntity.getDiskObjectPath()));
 						try (FileInputStream fis = new FileInputStream(file)) {

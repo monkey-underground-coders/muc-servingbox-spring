@@ -131,6 +131,9 @@ public class FSEntityController {
 			return ResponseEntity.notFound().build();
 		}
 		FSEntity file = optionalFSEntity.get();
+		if (file.isFile()) {
+			throw new FolderOperationOnFileException();
+		}
 		return ResponseEntity.ok()
 			.header("Content-Disposition", "attachment; filename=" + LocalHtmlUtils.htmlEscape(file.getName()) + ".zip")
 			.body(outputStream -> {

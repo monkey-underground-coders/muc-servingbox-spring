@@ -31,21 +31,4 @@ public abstract class AlgorithmUtils {
 		out.add(path);
 		return out;
 	}
-
-//	public static List<String> separatePath(String path) {
-//		if (path == null || path.equals("/")) return new ArrayList<>();
-//		String truncatedPath = path.substring(1);
-//		List<Integer> indexes = IntStream.range(0, truncatedPath.length())
-//			.filter(i -> truncatedPath.charAt(i) == '/')
-//			.boxed()
-//			.collect(Collectors.toList());
-//		indexes.add(0);
-//		indexes.sort(Comparator.naturalOrder());
-//		List<String> out = new ArrayList<>();
-//		for (int i = 0; i < indexes.size() - 1; i++) {
-//			int from = indexes.get(i);
-//			int to = indexes.get(i + 1)
-//			out.add(truncatedPath.substring(from, to))
-//		}
-//	}
 }
