@@ -4,11 +4,9 @@ import com.a6raywa1cher.mucservingboxspring.model.User;
 import com.a6raywa1cher.mucservingboxspring.security.jpa.RefreshToken;
 import com.a6raywa1cher.mucservingboxspring.security.jwt.JwtRefreshPair;
 import com.a6raywa1cher.mucservingboxspring.security.jwt.service.JwtRefreshPairService;
-import com.a6raywa1cher.mucservingboxspring.security.jwt.service.JwtTokenService;
 import com.a6raywa1cher.mucservingboxspring.security.jwt.service.RefreshTokenService;
 import com.a6raywa1cher.mucservingboxspring.security.rest.req.GetNewJwtTokenRequest;
 import com.a6raywa1cher.mucservingboxspring.security.rest.req.InvalidateTokenRequest;
-import com.a6raywa1cher.mucservingboxspring.service.UserService;
 import com.a6raywa1cher.mucservingboxspring.utils.AuthenticationResolver;
 import com.a6raywa1cher.mucservingboxspring.utils.Views;
 import com.fasterxml.jackson.annotation.JsonView;
@@ -30,21 +28,15 @@ import java.util.Optional;
 public class AuthController {
 	private final RefreshTokenService refreshTokenService;
 
-	private final JwtTokenService jwtTokenService;
-
 	private final AuthenticationResolver authenticationResolver;
 
 	private final JwtRefreshPairService jwtRefreshPairService;
 
-	private final UserService userService;
-
 	public AuthController(AuthenticationResolver authenticationResolver, RefreshTokenService refreshTokenService,
-						  JwtTokenService jwtTokenService, JwtRefreshPairService jwtRefreshPairService, UserService userService) {
+						  JwtRefreshPairService jwtRefreshPairService) {
 		this.authenticationResolver = authenticationResolver;
 		this.refreshTokenService = refreshTokenService;
-		this.jwtTokenService = jwtTokenService;
 		this.jwtRefreshPairService = jwtRefreshPairService;
-		this.userService = userService;
 	}
 
 	@GetMapping("/user")

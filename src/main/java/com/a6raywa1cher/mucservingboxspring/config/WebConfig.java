@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.web.filter.CommonsRequestLoggingFilter;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.AsyncSupportConfigurer;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
@@ -24,6 +25,19 @@ public class WebConfig implements WebMvcConfigurer {
 	public WebConfig(@Valid AppConfigProperties properties, UserHandlerMethodArgumentResolver userHandlerMethodArgumentResolver) {
 		this.properties = properties;
 		this.userHandlerMethodArgumentResolver = userHandlerMethodArgumentResolver;
+	}
+
+	@Bean
+	public CommonsRequestLoggingFilter logFilter() {
+		CommonsRequestLoggingFilter filter
+			= new CommonsRequestLoggingFilter();
+		filter.setIncludeQueryString(true);
+		filter.setIncludePayload(true);
+		filter.setMaxPayloadLength(200);
+		filter.setIncludeHeaders(false);
+		filter.setIncludeClientInfo(true);
+		filter.setAfterMessagePrefix("REQUEST DATA : ");
+		return filter;
 	}
 
 	@Bean
