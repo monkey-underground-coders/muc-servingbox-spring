@@ -4,8 +4,11 @@ package com.a6raywa1cher.mucservingboxspring.unit;
 import com.a6raywa1cher.mucservingboxspring.model.User;
 import com.a6raywa1cher.mucservingboxspring.model.UserRole;
 import com.a6raywa1cher.mucservingboxspring.model.file.FSEntity;
-import com.a6raywa1cher.mucservingboxspring.model.repo.FSEntityRepository;
+import com.a6raywa1cher.mucservingboxspring.model.lesson.LessonSchema;
 import com.a6raywa1cher.mucservingboxspring.model.repo.UserRepository;
+import com.a6raywa1cher.mucservingboxspring.service.FSEntityService;
+import com.a6raywa1cher.mucservingboxspring.service.LessonSchemaService;
+import com.a6raywa1cher.mucservingboxspring.service.UserService;
 import com.a6raywa1cher.mucservingboxspring.service.impl.UserServiceImpl;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -16,6 +19,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.time.Duration;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 import static org.junit.Assert.*;
@@ -29,25 +33,34 @@ public class UserServiceImplUnitTests {
 	@Mock
 	private PasswordEncoder passwordEncoder;
 	@Mock
-	private FSEntityRepository fsEntityRepository;
+	private LessonSchemaService lessonSchemaService;
+	@Mock
+	private FSEntityService fsEntityService;
 	private final String temporaryUserName = "Sanya";
 	private final Duration temporaryUserAccessDuration = Duration.ofDays(1L);
 
 	@Test
 	public void deleteUserTest() {
-		UserServiceImpl userService = new UserServiceImpl(repository, passwordEncoder, temporaryUserAccessDuration,
-			temporaryUserName);
+		UserService userService = new UserServiceImpl(repository, passwordEncoder, temporaryUserAccessDuration,
+			temporaryUserName, lessonSchemaService, fsEntityService);
 
-		User user = new User();
+		LessonSchema lessonSchema = new LessonSchema();
+		FSEntity rootFolder = FSEntity.createFolder("/f1/", null, false);
+		User user = User.builder()
+			.rootFolder(rootFolder)
+			.schemaList(List.of(lessonSchema))
+			.build();
 
 		userService.deleteUser(user);
 		verify(repository).delete(user);
+		verify(lessonSchemaService).deleteSchema(lessonSchema);
+		verify(fsEntityService).deleteEntity(rootFolder);
 	}
 
 	@Test
 	public void createTempUserTest() {
-		UserServiceImpl userService = new UserServiceImpl(repository, passwordEncoder, temporaryUserAccessDuration,
-			temporaryUserName);
+		UserService userService = new UserServiceImpl(repository, passwordEncoder, temporaryUserAccessDuration,
+			temporaryUserName, lessonSchemaService, fsEntityService);
 
 		List<User> saved = getSaveTracker();
 
@@ -69,13 +82,14 @@ public class UserServiceImplUnitTests {
 
 		assertEquals(toCheck, output);
 		assertEquals(user, toCheck);
-
+		assertNotNull(output.getExpiringAt());
+		assertTrue(output.getExpiringAt().isAfter(ZonedDateTime.now()));
 	}
 
 	@Test
 	public void createTest() {
-		UserServiceImpl userService = new UserServiceImpl(repository, passwordEncoder, temporaryUserAccessDuration,
-			temporaryUserName);
+		UserService userService = new UserServiceImpl(repository, passwordEncoder, temporaryUserAccessDuration,
+			temporaryUserName, lessonSchemaService, fsEntityService);
 
 		List<User> saved = getSaveTracker();
 		when(passwordEncoder.encode("123")).thenReturn("123");
@@ -102,8 +116,8 @@ public class UserServiceImplUnitTests {
 
 	@Test
 	public void editPasswordTest(){
-		UserServiceImpl userService = new UserServiceImpl(repository, passwordEncoder, temporaryUserAccessDuration,
-			temporaryUserName);
+		UserService userService = new UserServiceImpl(repository, passwordEncoder, temporaryUserAccessDuration,
+			temporaryUserName, lessonSchemaService, fsEntityService);
 
 		User user = User.builder()
 			.password("321")
@@ -122,8 +136,8 @@ public class UserServiceImplUnitTests {
 
 	@Test
 	public void editRootFolderTest() {
-		UserServiceImpl userService = new UserServiceImpl(repository, passwordEncoder, temporaryUserAccessDuration,
-			temporaryUserName);
+		UserService userService = new UserServiceImpl(repository, passwordEncoder, temporaryUserAccessDuration,
+			temporaryUserName, lessonSchemaService, fsEntityService);
 
 		FSEntity targetFolder = FSEntity.createFolder("/f2/", null, false);
 		FSEntity expectedFolder =  FSEntity.createFolder("/f1/", null, false);
@@ -140,17 +154,16 @@ public class UserServiceImplUnitTests {
 
 		assertEquals(toCheck, output);
 		assertEquals(expectedFolder, toCheck.getRootFolder());
-
 	}
 
 	@Test
 	public void setLastVisitAt() {
-		UserServiceImpl userService = new UserServiceImpl(repository, passwordEncoder, temporaryUserAccessDuration,
-			temporaryUserName);
+		UserService userService = new UserServiceImpl(repository, passwordEncoder, temporaryUserAccessDuration,
+			temporaryUserName, lessonSchemaService, fsEntityService);
 
 
-		ZonedDateTime targetZonedDateTime = ZonedDateTime.of(2020, 12, 3, 12, 32, 59, 232, ZoneId.of("UTC"));
-		ZonedDateTime expectedZoneDateTime = ZonedDateTime.of(2020, 12, 3, 15, 32, 59, 232, ZoneId.of("UTC"));
+		ZonedDateTime targetZonedDateTime = ZonedDateTime.now();
+		ZonedDateTime expectedZoneDateTime = ZonedDateTime.now().plusDays(3);
 
 		User user = User.builder()
 			.lastVisitAt(targetZonedDateTime)
@@ -167,23 +180,22 @@ public class UserServiceImplUnitTests {
 
 	@Test
 	public void editUserTest() {
-		UserServiceImpl userService = new UserServiceImpl(repository, passwordEncoder, temporaryUserAccessDuration,
-			temporaryUserName);
+		UserService userService = new UserServiceImpl(repository, passwordEncoder, temporaryUserAccessDuration,
+			temporaryUserName, lessonSchemaService, fsEntityService);
 
 		User user = User.builder()
-			.username("Dolban")
+			.username("Username")
 			.name("Rolan")
 			.build();
 
 		List<User> saved = getSaveTracker();
-		User output = userService.editUser(user, null, "Gay", "Gleb");
+		User output = userService.editUser(user, null, "TheSamePerson", "Roland");
 
 		User toCheck = saved.get(0);
 
 		assertEquals(toCheck, output);
-		assertEquals("Gay", toCheck.getUsername());
-		assertEquals("Gleb", toCheck.getName());
-
+		assertEquals("TheSamePerson", toCheck.getUsername());
+		assertEquals("Roland", toCheck.getName());
 	}
 
 	private List<User> getSaveTracker() {
