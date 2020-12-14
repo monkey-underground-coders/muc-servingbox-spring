@@ -3,7 +3,10 @@ package com.a6raywa1cher.mucservingboxspring.service.impl;
 import com.a6raywa1cher.mucservingboxspring.model.User;
 import com.a6raywa1cher.mucservingboxspring.model.UserRole;
 import com.a6raywa1cher.mucservingboxspring.model.file.FSEntity;
+import com.a6raywa1cher.mucservingboxspring.model.lesson.LessonSchema;
 import com.a6raywa1cher.mucservingboxspring.model.repo.UserRepository;
+import com.a6raywa1cher.mucservingboxspring.service.FSEntityService;
+import com.a6raywa1cher.mucservingboxspring.service.LessonSchemaService;
 import com.a6raywa1cher.mucservingboxspring.service.UserService;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,12 +18,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.time.Duration;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -30,15 +31,19 @@ public class UserServiceImpl implements UserService {
 	private final PasswordEncoder passwordEncoder;
 	private final Duration temporaryUserAccessDuration;
 	private final String temporaryUserName;
+	private final LessonSchemaService lessonSchemaService;
+	private final FSEntityService fsEntityService;
 
 	@Autowired
 	public UserServiceImpl(UserRepository repository, PasswordEncoder passwordEncoder,
 						   @Value("${app.temporary-user-access-duration}") Duration temporaryUserAccessDuration,
-						   @Value("${app.temporary-user-name}") String temporaryUserName) {
+						   @Value("${app.temporary-user-name}") String temporaryUserName, LessonSchemaService lessonSchemaService, FSEntityService fsEntityService) {
 		this.repository = repository;
 		this.passwordEncoder = passwordEncoder;
 		this.temporaryUserAccessDuration = temporaryUserAccessDuration;
 		this.temporaryUserName = temporaryUserName;
+		this.lessonSchemaService = lessonSchemaService;
+		this.fsEntityService = fsEntityService;
 	}
 
 	private int extractNumber(String name) {
@@ -127,7 +132,16 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
+	@Transactional(rollbackOn = Exception.class)
 	public void deleteUser(User user) {
+		List<LessonSchema> schemaList = user.getSchemaList();
+		if (schemaList != null) {
+			schemaList.forEach(lessonSchemaService::deleteSchema);
+		}
+		FSEntity rootFolder = user.getRootFolder();
+		if (rootFolder != null) {
+			fsEntityService.deleteEntity(rootFolder);
+		}
 		repository.delete(user);
 	}
 }
