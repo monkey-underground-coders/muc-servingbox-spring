@@ -2,7 +2,7 @@
 app:
   version: '@project.version@ c:@git.commit.id.abbrev@_@git.build.time@ b:@maven.build.timestamp@'
   cors-allowed-origins: [ "*" ]
-  upload-dir:
+  upload-dir: # REQUIRED absolute path to the container directory
   temporary-user-access-duration: P1D
   temporary-user-name: "Временный ученик #%s"
   max-sizes:
@@ -11,9 +11,9 @@ app:
     live-lesson-connected: 25MB
   student-home-enabled: true
   first-admin:
-    username:
-    name:
-    password:
+    username: # REQUIRED first admin username
+    name: # REQUIRED first admin name
+    password: # REQUIRED first admin password
 jwt:
   max-refresh-tokens-per-user: 5
   secret: fill-me-later
