@@ -17,10 +17,9 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.Duration;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -52,6 +51,7 @@ public class UserServiceImplUnitTests {
 			.build();
 
 		userService.deleteUser(user);
+
 		verify(repository).delete(user);
 		verify(lessonSchemaService).deleteSchema(lessonSchema);
 		verify(fsEntityService).deleteEntity(rootFolder);
@@ -66,7 +66,7 @@ public class UserServiceImplUnitTests {
 
 		User output = userService.create("830");
 
-		User user = User.builder()
+		User reference = User.builder()
 			.username(output.getUsername())
 			.password(output.getPassword())
 			.name(output.getName())
@@ -79,9 +79,8 @@ public class UserServiceImplUnitTests {
 			.build();
 
 		User toCheck = saved.get(0);
-
 		assertEquals(toCheck, output);
-		assertEquals(user, toCheck);
+		assertEquals(reference, toCheck);
 		assertNotNull(output.getExpiringAt());
 		assertTrue(output.getExpiringAt().isAfter(ZonedDateTime.now()));
 	}
@@ -96,7 +95,7 @@ public class UserServiceImplUnitTests {
 
 		User output = userService.create(UserRole.STUDENT, "Sanya", "Sanya", "123", "890");
 
-		User user = User.builder()
+		User reference = User.builder()
 			.username("Sanya")
 			.password("123")
 			.name("Sanya")
@@ -111,11 +110,11 @@ public class UserServiceImplUnitTests {
 		User toCheck = saved.get(0);
 
 		assertEquals(toCheck, output);
-		assertEquals(user, toCheck);
+		assertEquals(reference, toCheck);
 	}
 
 	@Test
-	public void editPasswordTest(){
+	public void editPasswordTest() {
 		UserService userService = new UserServiceImpl(repository, passwordEncoder, temporaryUserAccessDuration,
 			temporaryUserName, lessonSchemaService, fsEntityService);
 
@@ -124,7 +123,6 @@ public class UserServiceImplUnitTests {
 			.build();
 
 		List<User> saved = getSaveTracker();
-
 		when(passwordEncoder.encode("123")).thenReturn("123");
 
 		User output = userService.editPassword(user, "123");
@@ -140,18 +138,16 @@ public class UserServiceImplUnitTests {
 			temporaryUserName, lessonSchemaService, fsEntityService);
 
 		FSEntity targetFolder = FSEntity.createFolder("/f2/", null, false);
-		FSEntity expectedFolder =  FSEntity.createFolder("/f1/", null, false);
-
-
+		FSEntity expectedFolder = FSEntity.createFolder("/f1/", null, false);
 		User user = User.builder()
 			.rootFolder(targetFolder)
 			.build();
 
 		List<User> saved = getSaveTracker();
+
 		User output = userService.editRootFolder(user, expectedFolder);
 
 		User toCheck = saved.get(0);
-
 		assertEquals(toCheck, output);
 		assertEquals(expectedFolder, toCheck.getRootFolder());
 	}
@@ -162,20 +158,19 @@ public class UserServiceImplUnitTests {
 			temporaryUserName, lessonSchemaService, fsEntityService);
 
 
-		ZonedDateTime targetZonedDateTime = ZonedDateTime.now();
-		ZonedDateTime expectedZoneDateTime = ZonedDateTime.now().plusDays(3);
-
+		ZonedDateTime previousVisitTime = ZonedDateTime.now();
+		ZonedDateTime newVisitTime = ZonedDateTime.now().plusDays(3);
 		User user = User.builder()
-			.lastVisitAt(targetZonedDateTime)
+			.lastVisitAt(previousVisitTime)
 			.build();
 
 		List<User> saved = getSaveTracker();
-		User output = userService.setLastVisitAt(user, expectedZoneDateTime);
+
+		User output = userService.setLastVisitAt(user, newVisitTime);
 
 		User toCheck = saved.get(0);
-
 		assertEquals(toCheck, output);
-		assertEquals(expectedZoneDateTime, toCheck.getLastVisitAt());
+		assertEquals(newVisitTime, toCheck.getLastVisitAt());
 	}
 
 	@Test
@@ -189,10 +184,10 @@ public class UserServiceImplUnitTests {
 			.build();
 
 		List<User> saved = getSaveTracker();
+
 		User output = userService.editUser(user, null, "TheSamePerson", "Roland");
 
 		User toCheck = saved.get(0);
-
 		assertEquals(toCheck, output);
 		assertEquals("TheSamePerson", toCheck.getUsername());
 		assertEquals("Roland", toCheck.getName());

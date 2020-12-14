@@ -3,6 +3,7 @@ package com.a6raywa1cher.mucservingboxspring.service.impl;
 import com.a6raywa1cher.mucservingboxspring.model.User;
 import com.a6raywa1cher.mucservingboxspring.model.UserRole;
 import com.a6raywa1cher.mucservingboxspring.model.file.FSEntity;
+import com.a6raywa1cher.mucservingboxspring.model.lesson.LessonSchema;
 import com.a6raywa1cher.mucservingboxspring.model.repo.UserRepository;
 import com.a6raywa1cher.mucservingboxspring.service.FSEntityService;
 import com.a6raywa1cher.mucservingboxspring.service.LessonSchemaService;
@@ -20,10 +21,7 @@ import org.springframework.stereotype.Service;
 import javax.transaction.Transactional;
 import java.time.Duration;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -136,9 +134,13 @@ public class UserServiceImpl implements UserService {
 	@Override
 	@Transactional(rollbackOn = Exception.class)
 	public void deleteUser(User user) {
-		user.getSchemaList().forEach(lessonSchemaService::deleteSchema);
-		if (user.getRootFolder() != null){
-			fsEntityService.deleteEntity(user.getRootFolder());
+		List<LessonSchema> schemaList = user.getSchemaList();
+		if (schemaList != null) {
+			schemaList.forEach(lessonSchemaService::deleteSchema);
+		}
+		FSEntity rootFolder = user.getRootFolder();
+		if (rootFolder != null) {
+			fsEntityService.deleteEntity(rootFolder);
 		}
 		repository.delete(user);
 	}
