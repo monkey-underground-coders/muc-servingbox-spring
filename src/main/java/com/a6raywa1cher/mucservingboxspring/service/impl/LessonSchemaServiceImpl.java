@@ -19,6 +19,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
@@ -106,6 +107,7 @@ public class LessonSchemaServiceImpl implements LessonSchemaService {
 		return repository.save(lessonSchema);
 	}
 
+	@Transactional(rollbackOn = Exception.class)
 	@Override
 	public void deleteSchema(LessonSchema lessonSchema) {
 		service.deleteEntity(lessonSchema.getGenericFiles());
