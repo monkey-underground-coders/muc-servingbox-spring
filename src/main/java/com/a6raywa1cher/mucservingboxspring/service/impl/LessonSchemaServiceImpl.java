@@ -7,7 +7,6 @@ import com.a6raywa1cher.mucservingboxspring.model.lesson.LessonSchema;
 import com.a6raywa1cher.mucservingboxspring.model.lesson.LiveLesson;
 import com.a6raywa1cher.mucservingboxspring.model.lesson.QLessonSchema;
 import com.a6raywa1cher.mucservingboxspring.model.repo.LessonSchemaRepository;
-import com.a6raywa1cher.mucservingboxspring.model.repo.LiveLessonRepository;
 import com.a6raywa1cher.mucservingboxspring.service.FSEntityPermissionService;
 import com.a6raywa1cher.mucservingboxspring.service.FSEntityService;
 import com.a6raywa1cher.mucservingboxspring.service.LessonSchemaService;
@@ -29,21 +28,33 @@ import java.util.Optional;
 
 @Service
 public class LessonSchemaServiceImpl implements LessonSchemaService {
-	private final LiveLessonService liveLessonService;
 	private final FSEntityService service;
 	private final LessonSchemaRepository repository;
 	private final FSEntityPermissionService permissionService;
+	private LiveLessonService liveLessonService;
 
 	@Value("${strings.lesson-schema.on-the-fly.title}")
 	private String onTheFlyTitle;
 
 	@Autowired
-	public LessonSchemaServiceImpl(LiveLessonService liveLessonService, FSEntityService service, LessonSchemaRepository repository,
+	public LessonSchemaServiceImpl(FSEntityService service, LessonSchemaRepository repository,
 								   FSEntityPermissionService permissionService) {
+		this.service = service;
+		this.repository = repository;
+		this.permissionService = permissionService;
+	}
+
+	public LessonSchemaServiceImpl(LiveLessonService liveLessonService, FSEntityService service,
+								   LessonSchemaRepository repository, FSEntityPermissionService permissionService) {
 		this.liveLessonService = liveLessonService;
 		this.service = service;
 		this.repository = repository;
 		this.permissionService = permissionService;
+	}
+
+	@Autowired
+	public void setLiveLessonService(LiveLessonService liveLessonService) {
+		this.liveLessonService = liveLessonService;
 	}
 
 	private LessonSchema create(String title, String description, User creator, boolean onTheFly) {
@@ -107,19 +118,15 @@ public class LessonSchemaServiceImpl implements LessonSchemaService {
 		return repository.save(lessonSchema);
 	}
 
-	@Transactional(rollbackOn = Exception.class)
 	@Override
+	@Transactional(rollbackOn = Exception.class)
 	public void deleteSchema(LessonSchema lessonSchema) {
 		service.deleteEntity(lessonSchema.getGenericFiles());
 		List<LiveLesson> liveLessonList = lessonSchema.getLiveLessons();
-		if (liveLessonList != null){
+		if (liveLessonList != null) {
 			liveLessonList.forEach(liveLessonService::delete);
 		}
 		repository.delete(lessonSchema);
-	}
-
-	public String getOnTheFlyTitle() {
-		return onTheFlyTitle;
 	}
 
 	public void setOnTheFlyTitle(String onTheFlyTitle) {
