@@ -2,11 +2,14 @@ package com.a6raywa1cher.mucservingboxspring.unit;
 
 import com.a6raywa1cher.mucservingboxspring.model.User;
 import com.a6raywa1cher.mucservingboxspring.model.lesson.LessonSchema;
+import com.a6raywa1cher.mucservingboxspring.model.lesson.LiveLesson;
 import com.a6raywa1cher.mucservingboxspring.model.repo.LessonSchemaRepository;
 import com.a6raywa1cher.mucservingboxspring.service.FSEntityPermissionService;
 import com.a6raywa1cher.mucservingboxspring.service.FSEntityService;
 import com.a6raywa1cher.mucservingboxspring.service.LessonSchemaService;
+import com.a6raywa1cher.mucservingboxspring.service.LiveLessonService;
 import com.a6raywa1cher.mucservingboxspring.service.impl.LessonSchemaServiceImpl;
+import com.a6raywa1cher.mucservingboxspring.service.impl.LiveLessonServiceImpl;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -28,10 +31,13 @@ public class LessonSchemaServiceImplTests {
 	LessonSchemaRepository repository;
 	@Mock
 	FSEntityPermissionService permissionService;
+	@Mock
+	LiveLessonService liveLessonService;
 
 	@Test
 	public void createTest() {
-		LessonSchemaService lessonSchemaService = new LessonSchemaServiceImpl(service, repository, permissionService);
+		LessonSchemaService lessonSchemaService = new LessonSchemaServiceImpl(liveLessonService, service, repository, permissionService);
+
 		List<LessonSchema> saved = getSaveTracker();
 		User creatorUser = new User();
 
@@ -47,7 +53,8 @@ public class LessonSchemaServiceImplTests {
 
 	@Test
 	public void createOnFlyTest() {
-		LessonSchemaServiceImpl lessonSchemaService = new LessonSchemaServiceImpl(service, repository, permissionService);
+		LessonSchemaServiceImpl lessonSchemaService = new LessonSchemaServiceImpl(liveLessonService, service, repository, permissionService);
+
 		lessonSchemaService.setOnTheFlyTitle("Lesson one %s");
 		List<LessonSchema> saved = getSaveTracker();
 		User creatorUser = new User();
@@ -56,7 +63,7 @@ public class LessonSchemaServiceImplTests {
 
 		LessonSchema toCheck = saved.get(0);
 		assertEquals(toCheck, output);
-		assertTrue("RIP: " + toCheck.getTitle(), toCheck.getTitle().startsWith("Lesson one"));
+		assertTrue("Error: " + toCheck.getTitle(), toCheck.getTitle().startsWith("Lesson one"));
 		assertNull(toCheck.getDescription());
 		assertEquals(creatorUser, toCheck.getCreator());
 		assertTrue(toCheck.isOnTheFly());
@@ -64,7 +71,8 @@ public class LessonSchemaServiceImplTests {
 
 	@Test
 	public void editSchemaTest() {
-		LessonSchemaService lessonSchemaService = new LessonSchemaServiceImpl(service, repository, permissionService);
+		LessonSchemaService lessonSchemaService = new LessonSchemaServiceImpl(liveLessonService, service, repository, permissionService);
+
 		LessonSchema lessonSchema = new LessonSchema();
 
 		List<LessonSchema> saved = getSaveTracker();
@@ -79,7 +87,8 @@ public class LessonSchemaServiceImplTests {
 
 	@Test
 	public void transferToNotOnFly() {
-		LessonSchemaService lessonSchemaService = new LessonSchemaServiceImpl(service, repository, permissionService);
+		LessonSchemaService lessonSchemaService = new LessonSchemaServiceImpl(liveLessonService, service, repository, permissionService);
+
 		LessonSchema lessonSchema = new LessonSchema();
 
 		List<LessonSchema> saved = getSaveTracker();
@@ -93,18 +102,24 @@ public class LessonSchemaServiceImplTests {
 
 	@Test
 	public void deleteSchemaTest() {
-		LessonSchemaService lessonSchemaService = new LessonSchemaServiceImpl(service, repository, permissionService);
-		LessonSchema lessonSchema = new LessonSchema();
+		LessonSchemaService lessonSchemaService = new LessonSchemaServiceImpl(liveLessonService, service, repository, permissionService);
+
+		LiveLesson liveLesson = new LiveLesson();
+		LessonSchema lessonSchema = LessonSchema.builder()
+			.liveLessons(List.of(liveLesson))
+			.build();
 
 		lessonSchemaService.deleteSchema(lessonSchema);
 
+		verify(liveLessonService).delete(liveLesson);
 		verify(service).deleteEntity(lessonSchema.getGenericFiles());
 		verify(repository).delete(lessonSchema);
 	}
 
 	@Test
 	public void cloneSchemaTest() {
-		LessonSchemaService lessonSchemaService = new LessonSchemaServiceImpl(service, repository, permissionService);
+		LessonSchemaService lessonSchemaService = new LessonSchemaServiceImpl(liveLessonService, service, repository, permissionService);
+
 		User creatorUser = new User();
 		LessonSchema oldSchema = LessonSchema.builder()
 			.title("Lesson 1")
@@ -120,6 +135,7 @@ public class LessonSchemaServiceImplTests {
 		verify(service).copyFolderContent(oldSchema.getGenericFiles(), newSchema.getGenericFiles(),
 			false, creatorUser);
 
+		assertNotSame(newSchema, oldSchema);
 		assertEquals(oldSchema.getCreator(), newSchema.getCreator());
 		assertEquals(oldSchema.getDescription(), newSchema.getDescription());
 		assertEquals(oldSchema.getTitle(), newSchema.getTitle());

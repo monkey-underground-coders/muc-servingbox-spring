@@ -4,11 +4,14 @@ import com.a6raywa1cher.mucservingboxspring.model.User;
 import com.a6raywa1cher.mucservingboxspring.model.file.ActionType;
 import com.a6raywa1cher.mucservingboxspring.model.file.FSEntity;
 import com.a6raywa1cher.mucservingboxspring.model.lesson.LessonSchema;
+import com.a6raywa1cher.mucservingboxspring.model.lesson.LiveLesson;
 import com.a6raywa1cher.mucservingboxspring.model.lesson.QLessonSchema;
 import com.a6raywa1cher.mucservingboxspring.model.repo.LessonSchemaRepository;
+import com.a6raywa1cher.mucservingboxspring.model.repo.LiveLessonRepository;
 import com.a6raywa1cher.mucservingboxspring.service.FSEntityPermissionService;
 import com.a6raywa1cher.mucservingboxspring.service.FSEntityService;
 import com.a6raywa1cher.mucservingboxspring.service.LessonSchemaService;
+import com.a6raywa1cher.mucservingboxspring.service.LiveLessonService;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,6 +28,7 @@ import java.util.Optional;
 
 @Service
 public class LessonSchemaServiceImpl implements LessonSchemaService {
+	private final LiveLessonService liveLessonService;
 	private final FSEntityService service;
 	private final LessonSchemaRepository repository;
 	private final FSEntityPermissionService permissionService;
@@ -33,8 +37,9 @@ public class LessonSchemaServiceImpl implements LessonSchemaService {
 	private String onTheFlyTitle;
 
 	@Autowired
-	public LessonSchemaServiceImpl(FSEntityService service, LessonSchemaRepository repository,
+	public LessonSchemaServiceImpl(LiveLessonService liveLessonService, FSEntityService service, LessonSchemaRepository repository,
 								   FSEntityPermissionService permissionService) {
+		this.liveLessonService = liveLessonService;
 		this.service = service;
 		this.repository = repository;
 		this.permissionService = permissionService;
@@ -104,6 +109,10 @@ public class LessonSchemaServiceImpl implements LessonSchemaService {
 	@Override
 	public void deleteSchema(LessonSchema lessonSchema) {
 		service.deleteEntity(lessonSchema.getGenericFiles());
+		List<LiveLesson> liveLessonList = lessonSchema.getLiveLessons();
+		if (liveLessonList != null){
+			liveLessonList.forEach(liveLessonService::delete);
+		}
 		repository.delete(lessonSchema);
 	}
 
