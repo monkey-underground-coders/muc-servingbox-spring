@@ -62,6 +62,8 @@ public class LiveLessonServiceImpl implements LiveLessonService {
 		saved.setRoot(fsEntityService.createNewLiveLessonRoot(liveLesson));
 		permissionService.create(schema.getGenericFiles(), new ArrayList<>(), List.of(UserRole.STUDENT, UserRole.TEMPORARY_USER), true, List.of(ActionType.READ),
 			start, end);
+		permissionService.create(saved.getRoot(), List.of(creator), new ArrayList<>(), true,
+			List.of(ActionType.READ, ActionType.WRITE, ActionType.MANAGE_PERMISSIONS));
 		return repository.save(saved);
 	}
 
