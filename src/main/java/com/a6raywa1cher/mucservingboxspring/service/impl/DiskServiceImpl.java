@@ -118,7 +118,7 @@ public class DiskServiceImpl implements DiskService {
 	 */
 	private static void createDirs(Path path) {
 		if (!path.toFile().exists() && !path.toFile().mkdirs()) {
-			throw new RuntimeException("Unable to create dir");
+			throw new RuntimeException("Unable to create dir " + path.toAbsolutePath().toString());
 		}
 	}
 
